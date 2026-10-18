@@ -10,6 +10,20 @@
     <meta name="theme-color" content="#1a120b" />
     <title>Автоматизация бизнеса — процессы, CRM и системы</title>
     <script>
+      const pageNavigationEntry = window.performance.getEntriesByType("navigation")[0];
+
+      if (pageNavigationEntry?.type === "reload") {
+        const pageRoot = document.documentElement;
+        pageRoot.classList.add("is-restoring-scroll");
+        window.addEventListener("pageshow", () => {
+          window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+              pageRoot.classList.remove("is-restoring-scroll");
+            });
+          });
+        }, { once: true });
+      }
+
       const loaderStorageKey = "autokit-page-last-loaded";
       const loaderCooldown = 10 * 60 * 1000;
       const loaderNow = Date.now();
@@ -48,7 +62,8 @@
       <span class="page-refresh-notice-mark" aria-hidden="true"></span>
       <span>Страница обновлена</span>
     </div>
-    <header class="site-header">
+    <div class="site-page">
+      <header class="site-header">
       <div class="header-inner">
         <a class="site-name" href="./" aria-label="Автоматизация бизнеса — на главную">Auto<span>.</span>kit</a>
         <nav class="main-nav" aria-label="Основная навигация">
@@ -59,204 +74,224 @@
         </nav>
         <a class="header-link" href="#services">Наши услуги <span aria-hidden="true">↗</span></a>
       </div>
-    </header>
+      </header>
 
-    <main id="top">
+      <main id="top">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-inner">
           <div class="hero-copy">
-            <h1 id="hero-title">Единая система управления бизнесом</h1>
+            <h1 id="hero-title">Единая система управления процессами</h1>
             <p class="hero-description">
               Настраиваем процессы и внедряем цифровые инструменты, чтобы команда
               работала слаженно, а бизнес рос на понятной системе.
             </p>
             <div class="hero-actions">
               <a class="button button-primary" href="#services">
-                Найти точку роста <span aria-hidden="true">↗</span>
+                Собрать свой проект и узнать стоимость <span aria-hidden="true">↗</span>
               </a>
               <a class="text-link" href="#approach">Как мы работаем <span aria-hidden="true">↓</span></a>
             </div>
             <div class="hero-note">
               <span class="note-mark" aria-hidden="true">✳</span>
-              <p>Сначала разбираемся в задаче.<br />Затем подбираем систему.</p>
+              <p>Сначала разбираемся в задаче.<br />Затем свяжемся с вами и предложим решение.</p>
             </div>
           </div>
 
           <div class="workflow-stack">
-            <div class="workflow-card workflow-card-department-implementation workflow-card-back workflow-card-back-right" role="group" aria-label="Воронка отдела закупок" data-project-title="Воронка отдела закупок" data-project-time="≈ 2 недели" data-project-cost="от 150 000 ₽">
+            <div class="workflow-card workflow-card-department-implementation workflow-card-back workflow-card-back-right" role="group" aria-label="Воронка воронкаа закупок" data-project-title="Воронка воронкаа закупок" data-project-time="≈ 2 недели" data-project-cost="от 150 000 ₽" data-project-description="Путь заявки на закупку — от регистрации и согласования бюджета до заказа поставщику и подтверждения поставки. Статусы и ответственные видны команде на каждом этапе.">
               <div class="workflow-top">
                 <span class="window-dots"><i></i><i></i><i></i></span>
-                <span class="workflow-label">Отдел реализации</span>
-                <span class="workflow-menu">•••</span>
+                <span class="workflow-label">Воронка реализации</span>
+                <button class="workflow-info-button" type="button" aria-label="Подробнее о воронке воронкаа закупок" aria-haspopup="dialog">
+                  <span aria-hidden="true">i</span>
+                </button>
               </div>
               <div class="workflow-heading">
                 <div>
-                  <p class="workflow-kicker">Отдел реализации</p>
-                  <h2>От заявки до поставки</h2>
+                  <p class="workflow-kicker">Отдел реализации товаров и услуг</p>
+                  <h2>Синхронизация с каталогом товаров и услуг, онлайн-запись, аренда, автоматизация процессов, контроль дел сотрудника и его текущей нагрузки, работа по расписанию, учёт рабочего дня</h2>
                 </div>
               </div>
               <div class="workflow-stages">
                 <div class="stage-row">
-                  <span class="stage-icon stage-icon-lead">↗</span>
+                  <span class="stage-icon stage-icon-lead" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h13m-6-6 6 6-6 6"/></svg></span>
                   <span class="stage-name">Новая заявка</span>
-                  <span class="stage-count">09</span>
-                  <span class="stage-check">✓</span>
+                  <span class="stage-count">18</span>
+                  <span class="stage-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg></span>
                 </div>
                 <div class="stage-connector"></div>
                 <div class="stage-row">
-                  <span class="stage-icon stage-icon-deal">◎</span>
-                  <span class="stage-name">Согласование бюджета</span>
+                  <span class="stage-icon stage-icon-deal" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 9h8M8 13h5"/></svg></span>
+                  <span class="stage-name">Проверка товара на складе</span>
+                  <span class="stage-count">07</span>
+                  <span class="stage-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg></span>
+                </div>
+                <div class="stage-connector"></div>
+                <div class="stage-row">
+                  <span class="stage-icon stage-icon-signing" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 16.5 15.5 5l3.5 3.5L7.5 20H4zM13 7.5l3.5 3.5"/></svg></span>
+                  <span class="stage-name">Доставка клиенту</span>
                   <span class="stage-count">04</span>
-                  <span class="stage-check">✓</span>
-                </div>
-                <div class="stage-connector"></div>
-                <div class="stage-row">
-                  <span class="stage-icon stage-icon-deal">↗</span>
-                  <span class="stage-name">Заказ поставщику</span>
-                  <span class="stage-count">06</span>
-                  <span class="stage-check">✓</span>
+                  <span class="stage-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg></span>
                 </div>
                 <div class="stage-connector"></div>
                 <div class="stage-row stage-row-active">
-                  <span class="stage-icon stage-icon-result">✳</span>
+                  <span class="stage-icon stage-icon-result" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 2.1 5.2L20 10l-5.9 1.8L12 17l-2.1-5.2L4 10l5.9-1.8zM19 16v5m-2.5-2.5h5"/></svg></span>
                   <span class="stage-name">Поставка получена</span>
-                  <span class="stage-count">03</span>
-                  <span class="stage-check">✓</span>
+                  <span class="stage-count">02</span>
+                  <span class="stage-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg></span>
                 </div>
               </div>
               <div class="workflow-foot">
-                <span class="avatar-stack"><i>З</i><i>С</i><i>+</i></span>
+                <span class="avatar-stack" aria-hidden="true"><i class="avatar-portrait"><img src="assets/team-portrait-1.svg" alt=""></i><i class="avatar-portrait"><img src="assets/team-portrait-2.svg" alt=""></i><i>+</i></span>
                 <span>Заявки и поставки в одном процессе</span>
               </div>
               <p class="workflow-hint">Свайп вправо — согласовать, влево — отклонить</p>
-              <div class="workflow-actions">
-                <button class="workflow-action workflow-action-reject" type="button" data-choice="reject">Отклонить</button>
-                <button class="workflow-action workflow-action-approve" type="button" data-choice="approve">Добавить</button>
-              </div>
               <span class="workflow-feedback workflow-feedback-reject" aria-hidden="true">НЕ ПОДХОДИТ</span>
               <span class="workflow-feedback workflow-feedback-approve" aria-hidden="true">ДОБАВИТЬ</span>
               <span class="card-orbit orbit-one"></span>
               <span class="card-orbit orbit-two"></span>
             </div>
-            <div class="workflow-card workflow-card-department-project workflow-card-back workflow-card-back-left" role="group" aria-label="Воронка отдела разработки" data-project-title="Воронка отдела разработки" data-project-time="≈ 4 недели" data-project-cost="от 240 000 ₽">
+            <div class="workflow-card workflow-card-department-project workflow-card-back workflow-card-back-left" role="group" aria-label="Воронка воронкаа разработки" data-project-title="Воронка воронкаа разработки" data-project-time="≈ 4 недели" data-project-cost="от 240 000 ₽" data-project-description="Задачи поступают в единый поток, назначаются исполнителям, проходят разработку, код-ревью и тестирование. Команда видит прогресс и готовность каждого изменения к релизу.">
               <div class="workflow-top">
                 <span class="window-dots"><i></i><i></i><i></i></span>
-                <span class="workflow-label">Проектный отдел</span>
-                <span class="workflow-menu">•••</span>
+                <span class="workflow-label">Проектная воронка</span>
+                <button class="workflow-info-button" type="button" aria-label="Подробнее о воронке воронкаа разработки" aria-haspopup="dialog">
+                  <span aria-hidden="true">i</span>
+                </button>
               </div>
               <div class="workflow-heading">
                 <div>
-                  <p class="workflow-kicker">Воронка разработки</p>
-                  <h2>От задачи до релиза</h2>
+                  <p class="workflow-kicker">Отдел проектирования и разработки</p>
+                  <h2>Совместная работа над проектами, рабочие области, контроль за сроками выполнения задач и ответственными, расчёт эффективности отдела, шаблоны задач и роботы</h2>
                 </div>
               </div>
               <div class="workflow-stages">
                 <div class="stage-row">
-                  <span class="stage-icon stage-icon-lead">↗</span>
-                  <span class="stage-name">Новые задачи</span>
+                  <span class="stage-icon stage-icon-lead" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 18V6h12l4 6-4 6zM8 12h8m-4-4 4 4-4 4"/></svg></span>
+                  <span class="stage-name">Новый проект</span>
                   <span class="stage-count">14</span>
-                  <span class="stage-check">✓</span>
+                  <span class="stage-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg></span>
                 </div>
                 <div class="stage-connector"></div>
                 <div class="stage-row">
-                  <span class="stage-icon stage-icon-deal">◎</span>
-                  <span class="stage-name">В разработке</span>
-                  <span class="stage-count">08</span>
-                  <span class="stage-check">✓</span>
+                  <span class="stage-icon stage-icon-deal" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg></span>
+                  <span class="stage-name">Оценка сроков и стоимости</span>
+                  <span class="stage-count">06</span>
+                  <span class="stage-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg></span>
                 </div>
                 <div class="stage-connector"></div>
                 <div class="stage-row">
-                  <span class="stage-icon stage-icon-deal">↗</span>
-                  <span class="stage-name">Код-ревью и тесты</span>
-                  <span class="stage-count">03</span>
-                  <span class="stage-check">✓</span>
+                  <span class="stage-icon stage-icon-signing" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19 19 5m-9 0h9v9M5 5v4m-2-2h4"/></svg></span>
+                  <span class="stage-name">Разработка</span>
+                  <span class="stage-count">04</span>
+                  <span class="stage-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg></span>
                 </div>
                 <div class="stage-connector"></div>
                 <div class="stage-row stage-row-active">
-                  <span class="stage-icon stage-icon-result">✳</span>
-                  <span class="stage-name">Готово к релизу</span>
-                  <span class="stage-count">05</span>
-                  <span class="stage-check">✓</span>
+                  <span class="stage-icon stage-icon-result" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></svg></span>
+                  <span class="stage-name">Сдача проекта заказчику</span>
+                  <span class="stage-count">03</span>
+                  <span class="stage-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg></span>
                 </div>
               </div>
               <div class="workflow-foot">
-                <span class="avatar-stack"><i>Р</i><i>Т</i><i>+</i></span>
+                <span class="avatar-stack" aria-hidden="true"><i class="avatar-portrait"><img src="assets/team-portrait-2.svg" alt=""></i><i class="avatar-portrait"><img src="assets/team-portrait-3.svg" alt=""></i><i>+</i></span>
                 <span>Задачи проходят путь до релиза</span>
               </div>
               <p class="workflow-hint">Свайп вправо — согласовать, влево — отклонить</p>
-              <div class="workflow-actions">
-                <button class="workflow-action workflow-action-reject" type="button" data-choice="reject">Отклонить</button>
-                <button class="workflow-action workflow-action-approve" type="button" data-choice="approve">Добавить</button>
-              </div>
               <span class="workflow-feedback workflow-feedback-reject" aria-hidden="true">НЕ ПОДХОДИТ</span>
               <span class="workflow-feedback workflow-feedback-approve" aria-hidden="true">ДОБАВИТЬ</span>
               <span class="card-orbit orbit-one"></span>
               <span class="card-orbit orbit-two"></span>
             </div>
-            <div class="workflow-card workflow-card-department-sales is-active" role="group" aria-label="Воронка продаж" data-project-title="CRM и воронка продаж" data-project-time="≈ 3 недели" data-project-cost="от 180 000 ₽">
+            <div class="workflow-card workflow-card-department-sales is-active" role="group" aria-label="Воронка продаж" data-project-title="CRM и воронка продаж" data-project-time="≈ 3 недели" data-project-cost="от 180 000 ₽" data-project-description="CRM собирает заявки в одном месте и помогает контролировать путь сделки: работа менеджера, документы, закрытие и допродажи. Автоматические сценарии напоминают о следующих шагах и помогают команде не упускать клиентов.">
               <div class="workflow-top">
                 <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
-                <span class="workflow-label">Отдел продаж</span>
-                <span class="workflow-menu" aria-hidden="true">•••</span>
+                <span class="workflow-label">Воронка продаж</span>
+                <button class="workflow-info-button" type="button" aria-label="Подробнее о CRM и воронке продаж" aria-haspopup="dialog">
+                  <span aria-hidden="true">i</span>
+                </button>
               </div>
               <div class="workflow-heading">
                 <div>
-                  <p class="workflow-kicker">Воронка продаж</p>
-                  <h2>Контроль за сделкой на каждом этапе, автоматизированные сценарии допродаж</h2>
+                  <p class="workflow-kicker">Отдел продаж или закупок</p>
+                  <h2>Контроль за сделкой на каждом этапе, автоматизированные сценарии допродаж, статистика и отчёты по работе менеджеров, подключение телефонии/мессенджеров</h2>
                 </div>
               </div>
               <div class="workflow-stages">
                 <div class="stage-row">
-                  <span class="stage-icon stage-icon-lead" aria-hidden="true">↗</span>
+                  <span class="stage-icon stage-icon-lead" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M18 8v6m-3-3h6"/></svg></span>
                   <span class="stage-name">Новая заявка</span>
                   <span class="stage-count">12</span>
-                  <span class="stage-check" aria-hidden="true">✓</span>
+                  <span class="stage-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg></span>
                 </div>
                 <div class="stage-connector" aria-hidden="true"></div>
                 <div class="stage-row">
-                  <span class="stage-icon stage-icon-deal" aria-hidden="true">◎</span>
+                  <span class="stage-icon stage-icon-deal" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h16M8 15l3-4 3 2 5-6"/><path d="M16 7h3v3"/></svg></span>
                   <span class="stage-name">В работе у менеджера</span>
-                  <span class="stage-count">08</span>
-                  <span class="stage-check" aria-hidden="true">✓</span>
+                  <span class="stage-count">07</span>
+                  <span class="stage-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg></span>
                 </div>
                 <div class="stage-connector" aria-hidden="true"></div>
                 <div class="stage-row">
-                  <span class="stage-icon stage-icon-signing" aria-hidden="true">✎</span>
+                  <span class="stage-icon stage-icon-signing" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7zM14 3v6h5M10 14h6m-6 3h6"/></svg></span>
                   <span class="stage-name">Подписание документов</span>
-                  <span class="stage-count">03</span>
-                  <span class="stage-check" aria-hidden="true">✓</span>
+                  <span class="stage-count">04</span>
+                  <span class="stage-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg></span>
                 </div>
                 <div class="stage-connector" aria-hidden="true"></div>
                 <div class="stage-row stage-row-active">
-                  <span class="stage-icon stage-icon-result" aria-hidden="true">✳</span>
+                  <span class="stage-icon stage-icon-result" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="m8.5 12 2.3 2.3 4.8-5"/></svg></span>
                   <span class="stage-name">Сделка закрыта</span>
-                  <span class="stage-count">05</span>
-                  <span class="stage-check" aria-hidden="true">✓</span>
+                  <span class="stage-count">03</span>
+                  <span class="stage-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg></span>
                 </div>
                 <div class="stage-connector" aria-hidden="true"></div>
                 <div class="stage-row">
-                  <span class="stage-icon stage-icon-upsell" aria-hidden="true">+</span>
+                  <span class="stage-icon stage-icon-upsell" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></span>
                   <span class="stage-name">Доподажа</span>
                   <span class="stage-count">02</span>
-                  <span class="stage-check" aria-hidden="true">✓</span>
+                  <span class="stage-check" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></svg></span>
                 </div>
               </div>
               <div class="workflow-foot">
-                <span class="avatar-stack" aria-hidden="true"><i>М</i><i>А</i><i>+</i></span>
+                <span class="avatar-stack" aria-hidden="true"><i class="avatar-portrait"><img src="assets/team-portrait-1.svg" alt=""></i><i class="avatar-portrait"><img src="assets/team-portrait-3.svg" alt=""></i><i>+</i></span>
                 <span>Команда движется по общему сценарию</span>
               </div>
               <p class="workflow-hint">Свайп вправо — согласовать, влево — отклонить</p>
-              <div class="workflow-actions">
-                <button class="workflow-action workflow-action-reject" type="button" data-choice="reject">Отклонить</button>
-                <button class="workflow-action workflow-action-approve" type="button" data-choice="approve">Добавить</button>
-              </div>
               <span class="workflow-feedback workflow-feedback-reject" aria-hidden="true">НЕ ПОДХОДИТ</span>
               <span class="workflow-feedback workflow-feedback-approve" aria-hidden="true">ДОБАВИТЬ</span>
               <span class="card-orbit orbit-one" aria-hidden="true"></span>
               <span class="card-orbit orbit-two" aria-hidden="true"></span>
             </div>
+            <div class="workflow-complete" data-workflow-complete role="status" aria-live="polite" aria-atomic="true" hidden>
+              <div class="workflow-complete-copy">
+                <h3 data-workflow-complete-title></h3>
+                <p data-workflow-complete-description></p>
+                <p class="workflow-complete-analyst" data-workflow-complete-analyst hidden></p>
+              </div>
+              <a class="button button-primary workflow-complete-link" href="#project">
+                Продолжить детализацию <span aria-hidden="true">↓</span>
+              </a>
+            </div>
           </div>
         </div>
+        <dialog class="workflow-info-dialog" aria-labelledby="workflow-info-title">
+          <button class="workflow-info-close" type="button" aria-label="Закрыть окно">×</button>
+          <p class="workflow-info-eyebrow">Подробности процесса</p>
+          <h2 id="workflow-info-title"></h2>
+          <p class="workflow-info-description"></p>
+          <dl class="workflow-info-meta">
+            <div>
+              <dt>Срок</dt>
+              <dd data-workflow-info-time></dd>
+            </div>
+            <div>
+              <dt>Стоимость</dt>
+              <dd data-workflow-info-cost></dd>
+            </div>
+          </dl>
+        </dialog>
         <div class="hero-bottom">
           <span>От первого обращения до результата</span>
           <a href="#services">Листайте, чтобы узнать больше <span aria-hidden="true">↓</span></a>
@@ -376,9 +411,9 @@
         <p class="project-note">Сроки и стоимость указаны предварительно и уточняются после обсуждения задач проекта.</p>
         <p class="visually-hidden" data-project-status aria-live="polite"></p>
       </section>
-    </main>
+      </main>
 
-    <footer class="site-footer">
+      <footer class="site-footer">
       <div class="footer-main">
         <a class="site-name" href="./" aria-label="update — на главную">update<span>.</span></a>
         <p>Бизнесу — ясность.<br />Команде — удобные инструменты.</p>
@@ -393,6 +428,7 @@
         <p>&copy; <span data-current-year></span> update. Автоматизация бизнеса.</p>
         <a href="#top">Наверх <span aria-hidden="true">↑</span></a>
       </div>
-    </footer>
+      </footer>
+    </div>
   </body>
 </html>

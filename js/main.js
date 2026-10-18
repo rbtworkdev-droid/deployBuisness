@@ -98,7 +98,12 @@ const projectStatus = document.querySelector('[data-project-status]');
 if (workflowStack && projectItems && projectDropZone && projectStatus) {
   const cards = Array.from(workflowStack.querySelectorAll('.workflow-card')).reverse();
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const workflowComplete = workflowStack.querySelector('[data-workflow-complete]');
+  const workflowCompleteTitle = workflowComplete?.querySelector('[data-workflow-complete-title]');
+  const workflowCompleteDescription = workflowComplete?.querySelector('[data-workflow-complete-description]');
+  const workflowCompleteAnalyst = workflowComplete?.querySelector('[data-workflow-complete-analyst]');
   let activeCard = workflowStack.querySelector('.workflow-card:not(.workflow-card-back)');
+  let approvedCardCount = 0;
   let isChoosing = false;
   let drag = null;
   let swipeHintTimeout;
@@ -107,10 +112,24 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
   let swipeHintFadeTimeout;
   let swipeHintFadeCleanupTimeout;
 
-  function updateDragVisual(ghost, rect, deltaX, deltaY) {
+  function getEffectiveZoom(element) {
+    let zoom = 1;
+
+    for (let ancestor = element; ancestor && ancestor !== document.documentElement; ancestor = ancestor.parentElement) {
+      const ancestorZoom = Number.parseFloat(window.getComputedStyle(ancestor).zoom);
+
+      if (Number.isFinite(ancestorZoom)) {
+        zoom *= ancestorZoom;
+      }
+    }
+
+    return zoom;
+  }
+
+  function updateDragVisual(ghost, rect, deltaX, deltaY, zoom = 1) {
     const tilt = Math.max(-14, Math.min(14, (deltaX / rect.width) * 18));
-    ghost.style.left = `${rect.left + deltaX}px`;
-    ghost.style.top = `${rect.top + deltaY * 0.28}px`;
+    ghost.style.left = `${(rect.left + deltaX) / zoom}px`;
+    ghost.style.top = `${(rect.top + deltaY * 0.28) / zoom}px`;
     ghost.style.transform = `perspective(1200px) rotateX(${-deltaY * 0.025}deg) rotateY(${tilt * 0.35}deg) rotateZ(${tilt}deg)`;
     ghost.style.setProperty('--approve-opacity', String(Math.max(0, deltaX / (rect.width * 0.35))));
     ghost.style.setProperty('--reject-opacity', String(Math.max(0, -deltaX / (rect.width * 0.35))));
@@ -127,9 +146,16 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
       }
 
       const rect = card.getBoundingClientRect();
+      const zoom = getEffectiveZoom(card);
+      const layoutRect = {
+        left: rect.left / zoom,
+        top: rect.top / zoom,
+        width: rect.width / zoom,
+        height: rect.height / zoom,
+      };
       const departmentClass = Array.from(card.classList).find((className) => className.startsWith('workflow-card-department-'));
       const ghost = card.cloneNode(true);
-      ghost.className = `workflow-card ${departmentClass ?? ''} workflow-drag-ghost workflow-hint-ghost is-dragging is-swipe-hint`.trim();
+      ghost.className = `workflow-card is-active ${departmentClass ?? ''} workflow-drag-ghost workflow-hint-ghost is-dragging is-swipe-hint`.trim();
       ghost.setAttribute('aria-hidden', 'true');
       const cursor = document.createElement('span');
       const cursorSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -142,13 +168,11 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
       cursorSvg.append(cursorPath);
       cursor.append(cursorSvg);
       ghost.append(cursor);
-      ghost.querySelectorAll('button').forEach((button) => {
-        button.disabled = true;
-      });
-      ghost.style.left = `${rect.left}px`;
-      ghost.style.top = `${rect.top}px`;
-      ghost.style.width = `${rect.width}px`;
-      ghost.style.height = `${rect.height}px`;
+      ghost.style.zoom = String(zoom);
+      ghost.style.left = `${layoutRect.left}px`;
+      ghost.style.top = `${layoutRect.top}px`;
+      ghost.style.width = `${layoutRect.width}px`;
+      ghost.style.height = `${layoutRect.height}px`;
       ghost.style.transform = 'none';
       ghost.style.animation = 'none';
       document.body.append(ghost);
@@ -167,25 +191,18 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
       const duration = 2400;
       const fadeDuration = 700;
       const startTime = performance.now();
-      let previousTime = startTime;
-      let deltaX = 0;
-      let velocityX = 0;
       let fadeStartedAt;
       const animateSwipeHint = (now) => {
         const elapsed = now - startTime;
-        const currentRect = card.getBoundingClientRect();
-        const currentSwipeDistance = currentRect.width * 0.35 / 3;
-        const targetX = elapsed < 650 ? -currentSwipeDistance : elapsed < 1300 ? currentSwipeDistance : 0;
-        const frameTime = Math.min((now - previousTime) / 1000, 0.032);
-        const steps = Math.max(1, Math.ceil(frameTime / 0.016));
-        const stepTime = frameTime / steps;
-        previousTime = now;
-
-        for (let step = 0; step < steps; step += 1) {
-          const acceleration = (targetX - deltaX) * 180 - velocityX * 34;
-          velocityX += acceleration * stepTime;
-          deltaX += velocityX * stepTime;
-        }
+        const visualRect = card.getBoundingClientRect();
+        const currentRect = {
+          left: visualRect.left / zoom,
+          top: visualRect.top / zoom,
+          width: visualRect.width / zoom,
+          height: visualRect.height / zoom,
+        };
+        const progress = Math.min(elapsed / duration, 1);
+        const deltaX = -currentRect.width * 0.08 * Math.sin(progress * Math.PI * 2) * Math.sin(progress * Math.PI);
 
         ghost.style.top = `${currentRect.top}px`;
         ghost.style.width = `${currentRect.width}px`;
@@ -220,15 +237,70 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
   });
 
   if (!document.documentElement.classList.contains('is-loader-intro')) {
-    startSwipeHint(activeCard);
+    document.fonts.ready.then(() => startSwipeHint(activeCard));
   }
 
-  function updateActionAvailability() {
+  function updateCardAvailability() {
     cards.forEach((card) => {
       card.inert = card !== activeCard;
-      card.querySelectorAll('[data-choice]').forEach((button) => {
-        button.disabled = isChoosing || card !== activeCard;
-      });
+    });
+  }
+
+  function showWorkflowComplete(card = activeCard, finalized = false) {
+    if (
+      !workflowComplete
+      || !workflowCompleteTitle
+      || !workflowCompleteDescription
+      || !workflowCompleteAnalyst
+      || (finalized ? Boolean(activeCard) : !isLastCard(card))
+    ) {
+      return;
+    }
+
+    if (card?.isConnected) {
+      workflowStack.style.setProperty('--workflow-stack-min-height', `${card.offsetHeight}px`);
+      workflowStack.classList.add('has-workflow-complete');
+    }
+
+    workflowCompleteTitle.textContent = 'ЭТО НЕ ВСЁ';
+    workflowCompleteDescription.textContent = 'Детализируйте проект — так мы сможем подобрать оптимальное решение и рассчитать стоимость.';
+
+    if (approvedCardCount > 0 || !finalized) {
+      workflowCompleteAnalyst.hidden = true;
+      workflowCompleteAnalyst.classList.remove('is-visible');
+      workflowComplete.classList.remove('is-all-rejected');
+    } else {
+      workflowCompleteAnalyst.textContent = 'Не подошло? Аналитик поможет найти решение и ответит на вопросы. Продолжайте детализировать ваш проект.';
+      workflowCompleteAnalyst.hidden = false;
+      workflowCompleteAnalyst.classList.add('is-visible');
+      workflowComplete.classList.add('is-all-rejected');
+    }
+
+    workflowComplete.hidden = false;
+  }
+
+  function isLastCard(card) {
+    return card === activeCard && cards.filter((workflowCard) => workflowCard.isConnected).length === 1;
+  }
+
+  if (workflowComplete) {
+    workflowComplete.addEventListener('pointermove', (event) => {
+      if (reducedMotion.matches || event.pointerType === 'touch') {
+        return;
+      }
+
+      const rect = workflowComplete.getBoundingClientRect();
+      const horizontal = (event.clientX - rect.left) / rect.width * 2 - 1;
+      const vertical = (event.clientY - rect.top) / rect.height * 2 - 1;
+      workflowComplete.style.setProperty('--complete-tilt-x', `${-vertical}deg`);
+      workflowComplete.style.setProperty('--complete-tilt-y', `${horizontal * 2}deg`);
+      workflowComplete.style.setProperty('--complete-tilt-z', `${horizontal}deg`);
+    });
+
+    workflowComplete.addEventListener('pointerleave', () => {
+      workflowComplete.style.removeProperty('--complete-tilt-x');
+      workflowComplete.style.removeProperty('--complete-tilt-y');
+      workflowComplete.style.removeProperty('--complete-tilt-z');
     });
   }
 
@@ -237,6 +309,8 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
 
     if (!nextCard) {
       activeCard = null;
+      workflowStack.style.removeProperty('min-height');
+      workflowStack.classList.remove('is-card-promoting');
       return;
     }
 
@@ -249,6 +323,8 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
 
     if (reducedMotion.matches) {
       nextCard.style.removeProperty('transform');
+      workflowStack.style.removeProperty('min-height');
+      workflowStack.classList.remove('is-card-promoting');
       return;
     }
 
@@ -258,6 +334,7 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     const translateY = startingRect.top + startingRect.height / 2 - currentRect.top - currentRect.height / 2;
     const scaleX = currentRect.width ? startingRect.width / currentRect.width : 1;
     const scaleY = currentRect.height ? startingRect.height / currentRect.height : 1;
+    workflowStack.style.minHeight = `${nextCard.offsetHeight}px`;
     const baseTransform = startingTransform === 'none' ? '' : ` ${startingTransform}`;
     nextCard.classList.add('is-promoting');
     nextCard.style.transition = 'none';
@@ -275,6 +352,8 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
       nextCard.removeEventListener('transitionend', finishPromotion);
       nextCard.classList.remove('is-promoting');
       nextCard.style.removeProperty('transform');
+      workflowStack.style.removeProperty('min-height');
+      workflowStack.classList.remove('is-card-promoting');
     };
 
     nextCard.addEventListener('transitionend', finishPromotion);
@@ -282,6 +361,14 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     window.requestAnimationFrame(() => {
       nextCard.style.transform = 'none';
     });
+  }
+
+  function removeCardAndPromote(card) {
+    workflowStack.style.minHeight = `${workflowStack.offsetHeight}px`;
+    workflowStack.classList.add('is-card-promoting');
+    workflowStack.getBoundingClientRect();
+    card.remove();
+    promoteNextCard();
   }
 
   function addProjectItem(item) {
@@ -308,8 +395,15 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
   function createCardEffect(card, sourceRect, effectClass) {
     const flightCard = card.cloneNode(true);
     const computedStyle = window.getComputedStyle(card);
+    const zoom = getEffectiveZoom(card);
     const cardWidth = card.offsetWidth;
     const cardHeight = card.offsetHeight;
+    const layoutRect = {
+      left: sourceRect.left / zoom,
+      top: sourceRect.top / zoom,
+      width: sourceRect.width / zoom,
+      height: sourceRect.height / zoom,
+    };
     let translateX = 0;
     let translateY = 0;
 
@@ -332,11 +426,11 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     const departmentClass = Array.from(card.classList).find((className) => className.startsWith('workflow-card-department-'));
     flightCard.className = `workflow-card ${departmentClass ?? ''} workflow-flight ${effectClass}`.trim();
     flightCard.setAttribute('aria-hidden', 'true');
-    flightCard.querySelectorAll('button').forEach((button) => button.remove());
     flightCard.style.animation = 'none';
     flightCard.style.transition = 'none';
-    flightCard.style.left = `${sourceRect.left + (sourceRect.width - cardWidth) / 2 - translateX}px`;
-    flightCard.style.top = `${sourceRect.top + (sourceRect.height - cardHeight) / 2 - translateY}px`;
+    flightCard.style.zoom = String(zoom);
+    flightCard.style.left = `${layoutRect.left + (layoutRect.width - cardWidth) / 2 - translateX}px`;
+    flightCard.style.top = `${layoutRect.top + (layoutRect.height - cardHeight) / 2 - translateY}px`;
     flightCard.style.width = `${cardWidth}px`;
     flightCard.style.height = `${cardHeight}px`;
     flightCard.style.transformOrigin = computedStyle.transformOrigin;
@@ -349,34 +443,28 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     const flightCard = visualCard === card
       ? createCardEffect(card, sourceRect, '')
       : visualCard;
+    const zoom = Number.parseFloat(flightCard.style.zoom) || 1;
 
-    card.remove();
-    promoteNextCard();
+    card.style.visibility = 'hidden';
 
     if (reducedMotion.matches) {
       flightCard.remove();
+      removeCardAndPromote(card);
       onComplete();
       return;
     }
 
     const targetRect = projectDropZone.getBoundingClientRect();
-    const startScroll = window.scrollY;
-    const targetDocumentY = targetRect.top + startScroll + targetRect.height / 2;
-    const targetScreenY = Math.min(window.innerHeight * 0.76, targetDocumentY);
-    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-    const endScroll = Math.min(maxScroll, Math.max(0, targetDocumentY - targetScreenY));
-    const endScreenY = targetDocumentY - endScroll;
     const cardWidth = flightCard.offsetWidth;
     const cardHeight = flightCard.offsetHeight;
     const startLeft = Number.parseFloat(flightCard.style.left);
     const startTop = Number.parseFloat(flightCard.style.top);
-    const endScreenTop = endScreenY - cardHeight / 2;
-    const endScreenX = targetRect.left + targetRect.width / 2 - cardWidth / 2;
+    const endScreenTop = (targetRect.top + targetRect.height / 2) / zoom - cardHeight / 2;
+    const endScreenX = (targetRect.left + targetRect.width / 2) / zoom - cardWidth / 2;
     const originalTransform = flightCard.style.transform === 'none' ? '' : `${flightCard.style.transform} `;
     const startTime = performance.now();
     const duration = 1400;
-
-    document.documentElement.classList.add('is-project-flying');
+    let hasPromotedNextCard = false;
 
     function frame(now) {
       const progress = Math.min(1, (now - startTime) / duration);
@@ -391,16 +479,20 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
       flightCard.style.top = `${top}px`;
       flightCard.style.transform = `${originalTransform}perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${1 - fall * 0.62})`;
       flightCard.style.opacity = String(1 - Math.max(0, (progress - 0.82) / 0.18));
-      window.scrollTo(window.scrollX, startScroll + (endScroll - startScroll) * fall);
+
+      if (!hasPromotedNextCard && progress >= 0.55) {
+        hasPromotedNextCard = true;
+        removeCardAndPromote(card);
+      }
 
       if (progress < 1) {
         window.requestAnimationFrame(frame);
         return;
       }
-
-      window.scrollTo(window.scrollX, endScroll);
-      document.documentElement.classList.remove('is-project-flying');
       flightCard.remove();
+      if (!hasPromotedNextCard) {
+        removeCardAndPromote(card);
+      }
       onComplete();
     }
 
@@ -416,6 +508,7 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     burningCard.setAttribute('aria-hidden', 'true');
     burningCard.style.animation = 'none';
     burningCard.style.transition = 'none';
+    const zoom = Number.parseFloat(burningCard.style.zoom) || getEffectiveZoom(card);
     const cardStyle = window.getComputedStyle(burningCard);
     const cardWidth = burningCard.offsetWidth;
     const cardHeight = burningCard.offsetHeight;
@@ -437,6 +530,7 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     scene.style.top = `${sceneTop}px`;
     scene.style.width = `${sceneWidth}px`;
     scene.style.height = `${sceneHeight}px`;
+    scene.style.zoom = String(zoom);
     scene.style.transformBox = 'view-box';
     scene.style.transformOrigin = `${bleed + Number.parseFloat(originX)}px ${bleed + Number.parseFloat(originY)}px ${originZ}`;
     scene.style.transform = burnTransform || 'none';
@@ -484,6 +578,7 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     burningCard.style.width = `${cardWidth}px`;
     burningCard.style.height = `${cardHeight}px`;
     burningCard.style.margin = '0';
+    burningCard.style.zoom = '1';
     burningCard.style.transform = 'none';
     burningCard.style.transformOrigin = 'center';
     burningCard.style.opacity = '1';
@@ -515,25 +610,21 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     if (!context) {
       console.error('Unable to create a 2D canvas context for the card burn effect.');
       scene.remove();
-      card.remove();
-      promoteNextCard();
+      removeCardAndPromote(card);
       onComplete();
       return;
     }
 
     if (reducedMotion.matches) {
       document.body.append(scene);
-      card.remove();
-      promoteNextCard();
+      removeCardAndPromote(card);
       scene.remove();
       onComplete();
       return;
     }
 
     let startTime = 0;
-    const duration = 580;
-    const frameInterval = 1000 / 60;
-    let lastFrameTime = 0;
+    const duration = 780;
     const width = cardWidth;
     const height = cardHeight;
     const sampleCount = Math.max(28, Math.ceil(width / 14));
@@ -591,12 +682,6 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     }
 
     function burnFrame(now) {
-      if (now - lastFrameTime < frameInterval - 1) {
-        window.requestAnimationFrame(burnFrame);
-        return;
-      }
-      lastFrameTime = now;
-
       const progress = Math.min(1, (now - startTime) / duration);
       const edge = edgePositions.map((_, index) => edgeAt(index, now, progress));
       clipShape.setAttribute('d', createBurnPath(edge));
@@ -698,17 +783,16 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
         window.requestAnimationFrame(burnFrame);
       } else {
         scene.remove();
+        removeCardAndPromote(card);
         onComplete();
       }
     }
 
     clipShape.setAttribute('d', createBurnPath(edgePositions.map((_, index) => edgeAt(index, 0, 0))));
     document.body.append(scene);
-    card.remove();
-    promoteNextCard();
+    card.style.visibility = 'hidden';
     window.requestAnimationFrame((now) => {
       startTime = now;
-      lastFrameTime = now - frameInterval;
       window.requestAnimationFrame(burnFrame);
     });
   }
@@ -718,8 +802,12 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
       return;
     }
 
+    if (isLastCard(card)) {
+      showWorkflowComplete(card);
+    }
+
     isChoosing = true;
-    updateActionAvailability();
+    updateCardAvailability();
     const sourceRect = visualCard.getBoundingClientRect();
     const title = card.dataset.projectTitle ?? 'Карточка';
     const cardData = {
@@ -731,13 +819,18 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     const onComplete = () => {
       if (approved) {
         addProjectItem(cardData);
+        approvedCardCount += 1;
         projectStatus.textContent = `Добавлено в «Ваш проект»: ${title}.`;
       } else {
         projectStatus.textContent = `Карточка сожжена: ${title}.`;
       }
 
       isChoosing = false;
-      updateActionAvailability();
+      updateCardAvailability();
+
+      if (!activeCard) {
+        showWorkflowComplete(card, true);
+      }
     };
 
     if (approved) {
@@ -754,21 +847,42 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     card.style.removeProperty('--tilt-z');
   }
 
-  workflowStack.addEventListener('click', (event) => {
-    const button = event.target.closest('button[data-choice]');
-    const card = button?.closest('.workflow-card');
+  const workflowInfoDialog = document.querySelector('.workflow-info-dialog');
 
-    if (!button || !card || card !== activeCard) {
-      return;
-    }
+  if (workflowInfoDialog) {
+    const infoTitle = workflowInfoDialog.querySelector('#workflow-info-title');
+    const infoDescription = workflowInfoDialog.querySelector('.workflow-info-description');
+    const infoTime = workflowInfoDialog.querySelector('[data-workflow-info-time]');
+    const infoCost = workflowInfoDialog.querySelector('[data-workflow-info-cost]');
+    const closeButton = workflowInfoDialog.querySelector('.workflow-info-close');
 
-    chooseCard(card, button.dataset.choice === 'approve');
-  });
+    workflowStack.addEventListener('click', (event) => {
+      const infoButton = event.target.closest('.workflow-info-button');
+      const card = infoButton?.closest('.workflow-card');
+
+      if (!infoButton || !card) {
+        return;
+      }
+
+      infoTitle.textContent = card.dataset.projectTitle;
+      infoDescription.textContent = card.dataset.projectDescription;
+      infoTime.textContent = card.dataset.projectTime;
+      infoCost.textContent = card.dataset.projectCost;
+      workflowInfoDialog.showModal();
+    });
+
+    closeButton.addEventListener('click', () => workflowInfoDialog.close());
+    workflowInfoDialog.addEventListener('click', (event) => {
+      if (event.target === workflowInfoDialog) {
+        workflowInfoDialog.close();
+      }
+    });
+  }
 
   workflowStack.addEventListener('pointerdown', (event) => {
     const card = event.target.closest('.workflow-card.is-active');
 
-    if (!card || event.button !== 0 || event.target.closest('button') || isChoosing) {
+    if (!card || event.target.closest('.workflow-info-button') || event.button !== 0 || isChoosing) {
       return;
     }
 
@@ -784,6 +898,7 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
       lastTime: performance.now(),
       velocityX: 0,
       rect: card.getBoundingClientRect(),
+      zoom: getEffectiveZoom(card),
       previousVisibility: card.style.visibility,
       previousAnimation: card.style.animation,
     };
@@ -793,13 +908,11 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     const departmentClass = Array.from(card.classList).find((className) => className.startsWith('workflow-card-department-'));
     ghost.className = `workflow-card ${departmentClass ?? ''} workflow-drag-ghost is-dragging`.trim();
     ghost.setAttribute('aria-hidden', 'true');
-    ghost.querySelectorAll('button').forEach((button) => {
-      button.disabled = true;
-    });
-    ghost.style.left = `${drag.rect.left}px`;
-    ghost.style.top = `${drag.rect.top}px`;
-    ghost.style.width = `${drag.rect.width}px`;
-    ghost.style.height = `${drag.rect.height}px`;
+    ghost.style.zoom = String(drag.zoom);
+    ghost.style.left = `${drag.rect.left / drag.zoom}px`;
+    ghost.style.top = `${drag.rect.top / drag.zoom}px`;
+    ghost.style.width = `${drag.rect.width / drag.zoom}px`;
+    ghost.style.height = `${drag.rect.height / drag.zoom}px`;
     ghost.style.transform = 'none';
     ghost.style.animation = 'none';
     document.body.append(ghost);
@@ -819,11 +932,15 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
       drag.lastX = event.clientX;
       drag.lastTime = now;
 
-      updateDragVisual(drag.ghost, drag.rect, deltaX, deltaY);
+      updateDragVisual(drag.ghost, drag.rect, deltaX, deltaY, drag.zoom);
       return;
     }
 
     const card = event.target.closest('.workflow-card.is-active');
+
+    if (card && event.pointerType !== 'touch' && isLastCard(card)) {
+      showWorkflowComplete(card);
+    }
 
     if (!card || event.pointerType === 'touch' || isChoosing) {
       return;
@@ -832,9 +949,9 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     const rect = card.getBoundingClientRect();
     const horizontal = (event.clientX - rect.left) / rect.width * 2 - 1;
     const vertical = (event.clientY - rect.top) / rect.height * 2 - 1;
-    card.style.setProperty('--tilt-x', `${-vertical * 3}deg`);
-    card.style.setProperty('--tilt-y', `${horizontal * 6}deg`);
-    card.style.setProperty('--tilt-z', `${horizontal * 3}deg`);
+    card.style.setProperty('--tilt-x', `${-vertical}deg`);
+    card.style.setProperty('--tilt-y', `${horizontal * 2}deg`);
+    card.style.setProperty('--tilt-z', `${horizontal}deg`);
     card.classList.add('is-tilting');
   });
 
@@ -877,5 +994,5 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     }
   });
 
-  updateActionAvailability();
+  updateCardAvailability();
 }
