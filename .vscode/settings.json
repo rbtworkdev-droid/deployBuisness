@@ -3,6 +3,14 @@
         "/^git status --short && printf '\\\\n--- root ---\\\\n' && ls -la$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^git diff --check && python -c 'from html\\.parser import HTMLParser; from pathlib import Path; p=HTMLParser\\(\\); p\\.feed\\(Path\\(\"index\\.html\"\\)\\.read_text\\(\\)\\); print\\(\"HTML parsed successfully\"\\)' && git diff --stat -- index\\.html css/styles\\.css$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^node --check js/main\\.js && git diff --check && python -c 'from html\\.parser import HTMLParser; from pathlib import Path; parser=HTMLParser\\(\\); parser\\.feed\\(Path\\(\"index\\.html\"\\)\\.read_text\\(\\)\\); print\\(\"HTML parsed successfully\"\\)'$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

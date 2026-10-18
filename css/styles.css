@@ -286,14 +286,130 @@ a:focus-visible {
   font-size: 1.15rem;
 }
 
+.workflow-stack {
+  position: relative;
+  isolation: isolate;
+}
+
 .workflow-card {
   position: relative;
+  z-index: 1;
   overflow: hidden;
   padding: 1.25rem;
   border: 1px solid rgb(199 139 74 / 25%);
   border-radius: 12px;
   background: linear-gradient(145deg, #302116, #21170f 72%);
   box-shadow: 0 25px 80px rgb(0 0 0 / 26%);
+  animation: workflow-card-drop 1.35s cubic-bezier(0.2, 0.75, 0.3, 1) both;
+}
+
+.workflow-card.is-active {
+  z-index: 2;
+  cursor: grab;
+  touch-action: pan-y;
+  transform-origin: center;
+  transition: transform 180ms ease-out;
+}
+
+.workflow-card.is-active.is-dragging {
+  cursor: grabbing;
+  transition: none;
+  user-select: none;
+}
+
+.workflow-card.is-active.is-tilting {
+  transform: perspective(1200px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) rotateZ(var(--tilt-z, 0deg)) scale(1.015);
+}
+
+.workflow-card-back {
+  position: absolute;
+  z-index: 0;
+  animation-name: workflow-card-layer-drop;
+  animation-delay: 90ms;
+}
+
+.workflow-card-back-right {
+  --layer-x: 12px;
+  --layer-y: -84px;
+  --layer-rotate: 3deg;
+  --layer-rotate-y: -3deg;
+  --layer-bounce-y: -1.5deg;
+  animation-delay: 180ms;
+}
+
+.workflow-card-back-left {
+  --layer-x: -12px;
+  --layer-y: -42px;
+  --layer-rotate: -3deg;
+  --layer-rotate-y: 3deg;
+  --layer-bounce-y: 1.5deg;
+  z-index: 1;
+}
+
+.workflow-card-back {
+  transform: translate3d(var(--layer-x), var(--layer-y), 0) rotateZ(var(--layer-rotate));
+}
+
+@keyframes workflow-card-layer-drop {
+  0% {
+    transform: perspective(1200px) translate3d(var(--layer-x), -110vh, 0) rotateX(16deg) rotateY(var(--layer-rotate-y)) rotateZ(var(--layer-rotate)) scale(0.88);
+    box-shadow: 0 70px 55px rgb(0 0 0 / 5%);
+  }
+
+  62% {
+    transform: perspective(1200px) translate3d(var(--layer-x), var(--layer-y), 0) rotateX(-5deg) rotateY(var(--layer-rotate)) rotateZ(var(--layer-rotate)) scale(1.02);
+    box-shadow: 0 16px 22px rgb(0 0 0 / 38%);
+  }
+
+  73% {
+    transform: perspective(1200px) translate3d(var(--layer-x), calc(var(--layer-y) + 12px), 0) rotateX(3deg) rotateY(var(--layer-bounce-y)) rotateZ(var(--layer-rotate)) scale(0.99);
+    box-shadow: 0 8px 14px rgb(0 0 0 / 42%);
+  }
+
+  84% {
+    transform: perspective(1200px) translate3d(var(--layer-x), calc(var(--layer-y) - 5px), 0) rotateX(-1.5deg) rotateY(var(--layer-rotate)) rotateZ(var(--layer-rotate)) scale(1.005);
+    box-shadow: 0 17px 28px rgb(0 0 0 / 32%);
+  }
+
+  100% {
+    transform: perspective(1200px) translate3d(var(--layer-x), var(--layer-y), 0) rotateX(0) rotateY(0) rotateZ(var(--layer-rotate)) scale(1);
+    box-shadow: 0 25px 80px rgb(0 0 0 / 26%);
+  }
+}
+
+@keyframes workflow-card-drop {
+  0% {
+    transform: perspective(1200px) translate3d(5vw, -110vh, 0) rotateX(16deg) rotateY(-10deg) rotateZ(-5deg) scale(0.88);
+    filter: blur(4px);
+    box-shadow: 0 70px 55px rgb(0 0 0 / 5%);
+  }
+
+  62% {
+    transform: perspective(1200px) translate3d(-1vw, 0, 0) rotateX(-5deg) rotateY(4deg) rotateZ(2deg) scale(1.02);
+    filter: blur(0);
+    box-shadow: 0 16px 22px rgb(0 0 0 / 38%);
+  }
+
+  73% {
+    transform: perspective(1200px) translate3d(0, 12px, 0) rotateX(3deg) rotateY(-2deg) rotateZ(-1deg) scale(0.99);
+    box-shadow: 0 8px 14px rgb(0 0 0 / 42%);
+  }
+
+  84% {
+    transform: perspective(1200px) translate3d(0, -5px, 0) rotateX(-1.5deg) rotateY(1deg) rotateZ(0.5deg) scale(1.005);
+    box-shadow: 0 17px 28px rgb(0 0 0 / 32%);
+  }
+
+  93% {
+    transform: perspective(1200px) translate3d(0, 2px, 0) rotateX(0.5deg) rotateY(-0.3deg) rotateZ(-0.2deg) scale(0.998);
+    box-shadow: 0 22px 48px rgb(0 0 0 / 28%);
+  }
+
+  100% {
+    transform: perspective(1200px) translate3d(0, 0, 0) rotateX(0) rotateY(0) rotateZ(0) scale(1);
+    filter: blur(0);
+    box-shadow: 0 25px 80px rgb(0 0 0 / 26%);
+  }
 }
 
 .workflow-top,
@@ -450,6 +566,99 @@ a:focus-visible {
   padding-top: 1.25rem;
   color: var(--text-muted);
   font-size: 0.65rem;
+}
+
+.workflow-actions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.workflow-hint {
+  position: relative;
+  z-index: 1;
+  margin: 0.75rem 0 0;
+  color: #907a62;
+  font-size: 0.62rem;
+  text-align: center;
+}
+
+.workflow-action {
+  display: inline-flex;
+  min-height: 40px;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: rgb(255 255 255 / 3%);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 600;
+  transition: background-color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+}
+
+.workflow-action:hover:not(:disabled) {
+  background: rgb(255 255 255 / 8%);
+}
+
+.workflow-action-approve {
+  border-color: rgb(199 139 74 / 48%);
+  background: rgb(199 139 74 / 14%);
+  color: var(--accent-light);
+}
+
+.workflow-action-approve:hover:not(:disabled) {
+  background: rgb(199 139 74 / 25%);
+}
+
+.workflow-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.workflow-card.is-dragging .workflow-actions,
+.workflow-card.is-flying .workflow-actions {
+  visibility: hidden;
+}
+
+.workflow-feedback {
+  position: absolute;
+  z-index: 3;
+  top: 36%;
+  padding: 0.25rem 0.65rem;
+  border: 3px solid currentColor;
+  border-radius: 5px;
+  font-size: clamp(1rem, 2.2vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.workflow-feedback-approve {
+  right: 1rem;
+  color: #b5c18d;
+  transform: rotate(10deg);
+}
+
+.workflow-feedback-reject {
+  left: 1rem;
+  color: #dc927d;
+  transform: rotate(-10deg);
+}
+
+.workflow-card.is-dragging .workflow-feedback-approve {
+  opacity: var(--approve-opacity, 0);
+}
+
+.workflow-card.is-dragging .workflow-feedback-reject {
+  opacity: var(--reject-opacity, 0);
 }
 
 .avatar-stack {
@@ -796,6 +1005,129 @@ a:focus-visible {
   color: var(--accent-light);
 }
 
+.project-section {
+  border-top: 1px solid rgb(74 52 36 / 55%);
+}
+
+.project-table-wrap {
+  overflow-x: auto;
+  margin-top: 2rem;
+  border: 1px solid rgb(74 52 36 / 80%);
+  border-radius: 8px;
+  background: rgb(38 26 18 / 65%);
+}
+
+.project-table {
+  width: 100%;
+  min-width: 570px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.project-table th,
+.project-table td {
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid rgb(74 52 36 / 65%);
+  font-size: 0.82rem;
+}
+
+.project-table th {
+  color: var(--accent-light);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.project-table td {
+  color: var(--text-muted);
+}
+
+.project-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.project-table tbody th[scope="row"] {
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 550;
+}
+
+.project-empty-row td {
+  padding-block: 1.4rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.project-row-enter {
+  animation: project-row-appear 360ms ease-out both;
+}
+
+.project-note {
+  margin: 0.8rem 0 0;
+  color: #907a62;
+  font-size: 0.72rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.workflow-flight {
+  position: fixed;
+  z-index: 1000;
+  margin: 0;
+  pointer-events: none;
+  transform-origin: center;
+}
+
+.workflow-drag-ghost {
+  position: fixed;
+  z-index: 1100;
+  margin: 0;
+  pointer-events: none;
+  transform-origin: center;
+  will-change: left, top, transform;
+}
+
+.workflow-burn {
+  z-index: 1000;
+  overflow: hidden;
+  border-radius: 12px;
+  transform-style: flat;
+}
+
+.workflow-fire {
+  position: fixed;
+  z-index: 1001;
+  border-radius: 12px;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  transform-origin: center;
+}
+
+html.is-project-flying {
+  scroll-behavior: auto;
+}
+
+@keyframes project-row-appear {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .site-footer {
   padding-block: 2rem 1rem;
   border-top: 1px solid rgb(74 52 36 / 65%);
@@ -865,7 +1197,7 @@ a:focus-visible {
     max-width: 600px;
   }
 
-  .workflow-card {
+  .workflow-stack {
     width: min(100%, 480px);
     justify-self: center;
   }
@@ -934,7 +1266,7 @@ a:focus-visible {
     gap: 0.85rem;
   }
 
-  .main-nav a:last-child,
+  .main-nav a[href="#results"],
   .header-link {
     display: none;
   }
@@ -1075,5 +1407,22 @@ a:focus-visible {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .workflow-card {
+    animation: none;
+  }
+
+  .workflow-card-back {
+    animation: none;
+    transform: translate3d(var(--layer-x), var(--layer-y), 0) rotateZ(var(--layer-rotate));
+  }
+
+  .workflow-card.is-active.is-tilting {
+    transform: none;
+  }
+
+  .project-row-enter {
+    animation: none;
   }
 }
