@@ -37,6 +37,132 @@ a {
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+html.is-loading,
+html.is-loading body {
+  overflow: hidden;
+}
+
+.site-loader {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background:
+    radial-gradient(ellipse at 50% 45%, rgb(113 66 29 / 18%), transparent 42%),
+    var(--bg);
+  opacity: 1;
+  transition: opacity 220ms ease, visibility 220ms ease;
+}
+
+html.is-loading .site-loader {
+  display: grid;
+}
+
+.site-loader.is-exiting {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.site-loader-content {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+}
+
+.site-loader-logo {
+  color: var(--text);
+  font-size: clamp(2.2rem, 5vw, 3rem);
+  font-weight: 750;
+  letter-spacing: -0.08em;
+  line-height: 1;
+}
+
+.site-loader-logo span {
+  color: var(--accent);
+}
+
+.site-loader-status {
+  color: var(--accent-light);
+  font-size: 0.6rem;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.site-loader.is-connected .site-loader-status {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.site-loader-log {
+  position: absolute;
+  right: clamp(1rem, calc((100vw - 1120px) / 2), 3rem);
+  bottom: 1.5rem;
+  width: min(360px, calc(100% - 2rem));
+  padding: 0.85rem 1rem;
+  border: 1px solid rgb(74 52 36 / 68%);
+  border-radius: 8px;
+  background: rgb(26 18 11 / 78%);
+  box-shadow: 0 14px 40px rgb(0 0 0 / 18%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.site-loader-log-heading {
+  margin: 0 0 0.55rem;
+  color: #8e755b;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+}
+
+.site-loader-log-entries {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.site-loader-log-entry {
+  display: grid;
+  grid-template-columns: 3.6rem 1fr;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  line-height: 1.45;
+  animation: loader-log-enter 180ms ease-out both;
+}
+
+.site-loader-log-entry time {
+  color: #80694f;
+  font-variant-numeric: tabular-nums;
+}
+
+.site-loader-log-entry.is-complete span {
+  color: var(--accent-light);
+}
+
+@keyframes loader-log-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html.is-loading .workflow-card {
+  animation-play-state: paused;
+}
+
+.is-preparing-animations .workflow-card {
+  will-change: transform, filter, box-shadow;
+}
+
 a {
   color: inherit;
 }
@@ -154,14 +280,15 @@ a:focus-visible {
 
 .hero-inner {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(350px, 0.87fr);
+  grid-template-columns: minmax(0, 0.95fr) minmax(350px, 1fr);
   align-items: center;
-  gap: clamp(3rem, 8vw, 7rem);
+  gap: clamp(2.5rem, 6vw, 5rem);
 }
 
 .hero-copy {
   position: relative;
   z-index: 1;
+  align-self: start;
 }
 
 .eyebrow {
@@ -300,7 +427,40 @@ a:focus-visible {
   border-radius: 12px;
   background: linear-gradient(145deg, #302116, #21170f 72%);
   box-shadow: 0 25px 80px rgb(0 0 0 / 26%);
-  animation: workflow-card-drop 1.35s cubic-bezier(0.2, 0.75, 0.3, 1) both;
+  animation: workflow-card-drop 1.35s linear both;
+}
+
+.workflow-card-department-sales {
+  border-color: rgb(125 190 134 / 38%);
+  background:
+    radial-gradient(ellipse 120% 100% at 50% 0%, rgb(73 139 83 / 10%), transparent 82%),
+    linear-gradient(145deg, #302116, #21170f 72%);
+}
+
+.workflow-card-department-project {
+  border-color: rgb(112 164 218 / 38%);
+  background:
+    radial-gradient(ellipse 120% 100% at 50% 0%, rgb(68 119 177 / 11%), transparent 82%),
+    linear-gradient(145deg, #302116, #21170f 72%);
+}
+
+.workflow-card-department-implementation {
+  border-color: rgb(214 182 105 / 40%);
+  background:
+    radial-gradient(ellipse 120% 100% at 50% 0%, rgb(174 139 52 / 11%), transparent 82%),
+    linear-gradient(145deg, #302116, #21170f 72%);
+}
+
+.workflow-card[class*="workflow-card-department-"]::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  content: "";
+  mix-blend-mode: soft-light;
+  opacity: 0.08;
+  pointer-events: none;
 }
 
 .workflow-card.is-active {
@@ -308,7 +468,62 @@ a:focus-visible {
   cursor: grab;
   touch-action: pan-y;
   transform-origin: center;
-  transition: transform 180ms ease-out;
+  transition:
+    transform 180ms ease-out,
+    border-color 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.workflow-card.is-active.is-promoting {
+  transition: transform 720ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.workflow-card.is-swipe-hint::after {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  border: 1px solid rgb(245 201 142 / 55%);
+  border-radius: inherit;
+  box-shadow: 0 0 30px rgb(199 139 74 / 38%);
+  opacity: 0.9;
+  transition: opacity 700ms ease-out;
+  content: "";
+  pointer-events: none;
+}
+
+.workflow-card.is-swipe-hint-fading::after {
+  opacity: 0;
+}
+
+.workflow-hint-cursor {
+  position: absolute;
+  z-index: 5;
+  top: 45%;
+  left: 52%;
+  width: 24px;
+  height: 30px;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 55%));
+  pointer-events: none;
+  transform: rotate(-12deg);
+  transition: opacity 260ms ease-out;
+}
+
+.workflow-hint-cursor svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.workflow-hint-cursor path {
+  fill: var(--accent-light);
+  stroke: #2b1e14;
+  stroke-linejoin: round;
+  stroke-width: 1.8px;
+}
+
+.workflow-card.is-swipe-hint-fading .workflow-hint-cursor {
+  opacity: 0;
 }
 
 .workflow-card.is-active.is-dragging {
@@ -333,7 +548,6 @@ a:focus-visible {
   --layer-y: -84px;
   --layer-rotate: 3deg;
   --layer-rotate-y: -3deg;
-  --layer-bounce-y: -1.5deg;
   animation-delay: 180ms;
 }
 
@@ -342,7 +556,6 @@ a:focus-visible {
   --layer-y: -42px;
   --layer-rotate: -3deg;
   --layer-rotate-y: 3deg;
-  --layer-bounce-y: 1.5deg;
   z-index: 1;
 }
 
@@ -352,23 +565,53 @@ a:focus-visible {
 
 @keyframes workflow-card-layer-drop {
   0% {
-    transform: perspective(1200px) translate3d(var(--layer-x), -110vh, 0) rotateX(16deg) rotateY(var(--layer-rotate-y)) rotateZ(var(--layer-rotate)) scale(0.88);
+    transform: perspective(1200px) translate3d(var(--layer-x), -110vh, 0) rotateX(18deg) rotateY(var(--layer-rotate-y)) rotateZ(var(--layer-rotate)) scale(0.92);
     box-shadow: 0 70px 55px rgb(0 0 0 / 5%);
   }
 
-  62% {
-    transform: perspective(1200px) translate3d(var(--layer-x), var(--layer-y), 0) rotateX(-5deg) rotateY(var(--layer-rotate)) rotateZ(var(--layer-rotate)) scale(1.02);
-    box-shadow: 0 16px 22px rgb(0 0 0 / 38%);
+  10% {
+    transform: perspective(1200px) translate3d(var(--layer-x), calc(var(--layer-y) - 78vh), 0) rotateX(15deg) rotateY(var(--layer-rotate-y)) rotateZ(var(--layer-rotate)) scale(0.928);
+    box-shadow: 0 63px 51px rgb(0 0 0 / 9%);
   }
 
-  73% {
-    transform: perspective(1200px) translate3d(var(--layer-x), calc(var(--layer-y) + 12px), 0) rotateX(3deg) rotateY(var(--layer-bounce-y)) rotateZ(var(--layer-rotate)) scale(0.99);
-    box-shadow: 0 8px 14px rgb(0 0 0 / 42%);
+  20% {
+    transform: perspective(1200px) translate3d(var(--layer-x), calc(var(--layer-y) - 50vh), 0) rotateX(12deg) rotateY(var(--layer-rotate-y)) rotateZ(var(--layer-rotate)) scale(0.94);
+    box-shadow: 0 55px 46px rgb(0 0 0 / 14%);
   }
 
-  84% {
-    transform: perspective(1200px) translate3d(var(--layer-x), calc(var(--layer-y) - 5px), 0) rotateX(-1.5deg) rotateY(var(--layer-rotate)) rotateZ(var(--layer-rotate)) scale(1.005);
-    box-shadow: 0 17px 28px rgb(0 0 0 / 32%);
+  30% {
+    transform: perspective(1200px) translate3d(var(--layer-x), calc(var(--layer-y) - 30vh), 0) rotateX(9deg) rotateY(var(--layer-rotate-y)) rotateZ(var(--layer-rotate)) scale(0.952);
+    box-shadow: 0 46px 40px rgb(0 0 0 / 19%);
+  }
+
+  40% {
+    transform: perspective(1200px) translate3d(var(--layer-x), calc(var(--layer-y) - 16vh), 0) rotateX(6deg) rotateY(var(--layer-rotate-y)) rotateZ(var(--layer-rotate)) scale(0.964);
+    box-shadow: 0 37px 34px rgb(0 0 0 / 24%);
+  }
+
+  50% {
+    transform: perspective(1200px) translate3d(var(--layer-x), calc(var(--layer-y) - 7vh), 0) rotateX(4deg) rotateY(var(--layer-rotate-y)) rotateZ(var(--layer-rotate)) scale(0.976);
+    box-shadow: 0 30px 30px rgb(0 0 0 / 28%);
+  }
+
+  60% {
+    transform: perspective(1200px) translate3d(var(--layer-x), calc(var(--layer-y) - 2.5vh), 0) rotateX(2.5deg) rotateY(var(--layer-rotate-y)) rotateZ(var(--layer-rotate)) scale(0.986);
+    box-shadow: 0 24px 27px rgb(0 0 0 / 31%);
+  }
+
+  70% {
+    transform: perspective(1200px) translate3d(var(--layer-x), calc(var(--layer-y) - 0.6vh), 0) rotateX(1.5deg) rotateY(var(--layer-rotate-y)) rotateZ(var(--layer-rotate)) scale(0.993);
+    box-shadow: 0 24px 36px rgb(0 0 0 / 30%);
+  }
+
+  80% {
+    transform: perspective(1200px) translate3d(var(--layer-x), var(--layer-y), 0) rotateX(0.8deg) rotateY(0) rotateZ(var(--layer-rotate)) scale(0.997);
+    box-shadow: 0 25px 48px rgb(0 0 0 / 29%);
+  }
+
+  90% {
+    transform: perspective(1200px) translate3d(var(--layer-x), var(--layer-y), 0) rotateX(0.3deg) rotateY(0) rotateZ(var(--layer-rotate)) scale(0.999);
+    box-shadow: 0 25px 64px rgb(0 0 0 / 27%);
   }
 
   100% {
@@ -384,25 +627,57 @@ a:focus-visible {
     box-shadow: 0 70px 55px rgb(0 0 0 / 5%);
   }
 
-  62% {
-    transform: perspective(1200px) translate3d(-1vw, 0, 0) rotateX(-5deg) rotateY(4deg) rotateZ(2deg) scale(1.02);
+  10% {
+    transform: perspective(1200px) translate3d(4vw, -78vh, 0) rotateX(14deg) rotateY(-8deg) rotateZ(-4deg) scale(0.9);
+    filter: blur(3.6px);
+    box-shadow: 0 63px 51px rgb(0 0 0 / 9%);
+  }
+
+  20% {
+    transform: perspective(1200px) translate3d(3vw, -50vh, 0) rotateX(12deg) rotateY(-6deg) rotateZ(-3deg) scale(0.92);
+    filter: blur(3.1px);
+    box-shadow: 0 55px 46px rgb(0 0 0 / 14%);
+  }
+
+  30% {
+    transform: perspective(1200px) translate3d(2vw, -30vh, 0) rotateX(9deg) rotateY(-4deg) rotateZ(-2.2deg) scale(0.94);
+    filter: blur(2.6px);
+    box-shadow: 0 46px 40px rgb(0 0 0 / 19%);
+  }
+
+  40% {
+    transform: perspective(1200px) translate3d(1vw, -16vh, 0) rotateX(6deg) rotateY(-2.5deg) rotateZ(-1.4deg) scale(0.96);
+    filter: blur(2px);
+    box-shadow: 0 37px 34px rgb(0 0 0 / 24%);
+  }
+
+  50% {
+    transform: perspective(1200px) translate3d(0.5vw, -7vh, 0) rotateX(4deg) rotateY(-1.5deg) rotateZ(-0.8deg) scale(0.975);
+    filter: blur(1.4px);
+    box-shadow: 0 30px 30px rgb(0 0 0 / 28%);
+  }
+
+  60% {
+    transform: perspective(1200px) translate3d(0.2vw, -2.5vh, 0) rotateX(2.5deg) rotateY(-0.8deg) rotateZ(-0.4deg) scale(0.986);
+    filter: blur(0.8px);
+    box-shadow: 0 24px 27px rgb(0 0 0 / 31%);
+  }
+
+  70% {
+    transform: perspective(1200px) translate3d(0, -0.6vh, 0) rotateX(1.5deg) rotateY(-0.4deg) rotateZ(-0.2deg) scale(0.993);
+    filter: blur(0.3px);
+    box-shadow: 0 24px 36px rgb(0 0 0 / 30%);
+  }
+
+  80% {
+    transform: perspective(1200px) translate3d(0, 0, 0) rotateX(0.8deg) rotateY(-0.2deg) rotateZ(-0.1deg) scale(0.997);
     filter: blur(0);
-    box-shadow: 0 16px 22px rgb(0 0 0 / 38%);
+    box-shadow: 0 25px 48px rgb(0 0 0 / 29%);
   }
 
-  73% {
-    transform: perspective(1200px) translate3d(0, 12px, 0) rotateX(3deg) rotateY(-2deg) rotateZ(-1deg) scale(0.99);
-    box-shadow: 0 8px 14px rgb(0 0 0 / 42%);
-  }
-
-  84% {
-    transform: perspective(1200px) translate3d(0, -5px, 0) rotateX(-1.5deg) rotateY(1deg) rotateZ(0.5deg) scale(1.005);
-    box-shadow: 0 17px 28px rgb(0 0 0 / 32%);
-  }
-
-  93% {
-    transform: perspective(1200px) translate3d(0, 2px, 0) rotateX(0.5deg) rotateY(-0.3deg) rotateZ(-0.2deg) scale(0.998);
-    box-shadow: 0 22px 48px rgb(0 0 0 / 28%);
+  90% {
+    transform: perspective(1200px) translate3d(0, 0, 0) rotateX(0.3deg) rotateY(-0.1deg) rotateZ(-0.05deg) scale(0.999);
+    box-shadow: 0 25px 64px rgb(0 0 0 / 27%);
   }
 
   100% {
@@ -446,7 +721,7 @@ a:focus-visible {
 
 .workflow-label {
   color: #8e755b;
-  font-size: 0.57rem;
+  font-size: 0.68rem;
   font-weight: 650;
   letter-spacing: 0.16em;
 }
@@ -475,25 +750,6 @@ a:focus-visible {
   font-size: 1.2rem;
   font-weight: 550;
   letter-spacing: -0.025em;
-}
-
-.workflow-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.3rem 0.55rem;
-  border: 1px solid rgb(135 158 100 / 30%);
-  border-radius: 999px;
-  color: #b5c18d;
-  font-size: 0.62rem;
-  white-space: nowrap;
-}
-
-.workflow-status i {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #b5c18d;
 }
 
 .workflow-stages {
@@ -538,6 +794,16 @@ a:focus-visible {
 .stage-icon-result {
   background: rgb(199 139 74 / 18%);
   color: var(--accent-light);
+}
+
+.stage-icon-signing {
+  background: rgb(112 164 218 / 15%);
+  color: #9abce0;
+}
+
+.stage-icon-upsell {
+  background: rgb(125 190 134 / 15%);
+  color: #a4d2a9;
 }
 
 .stage-name {
@@ -621,7 +887,6 @@ a:focus-visible {
   opacity: 0.55;
 }
 
-.workflow-card.is-dragging .workflow-actions,
 .workflow-card.is-flying .workflow-actions {
   visibility: hidden;
 }
@@ -1096,6 +1361,10 @@ a:focus-visible {
   will-change: left, top, transform;
 }
 
+.workflow-hint-ghost {
+  z-index: 4;
+}
+
 .workflow-burn {
   overflow: hidden;
   border-radius: 12px;
@@ -1409,8 +1678,18 @@ html.is-project-flying {
     transition-duration: 0.01ms !important;
   }
 
+  .site-loader,
+  .site-loader-status {
+    transition-duration: 0.01ms !important;
+  }
+
+  .site-loader-log-entry {
+    animation: none;
+  }
+
   .workflow-card {
     animation: none;
+    will-change: auto;
   }
 
   .workflow-card-back {
