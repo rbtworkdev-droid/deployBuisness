@@ -111,6 +111,7 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
   let swipeHintFrame;
   let swipeHintFadeTimeout;
   let swipeHintFadeCleanupTimeout;
+  let swipeHintObserver;
 
   function getEffectiveZoom(element) {
     let zoom = 1;
@@ -232,13 +233,34 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
       }
 
       card.style.animation = 'none';
-      startSwipeHint(card);
     }, { once: true });
   });
 
-  if (!document.documentElement.classList.contains('is-loader-intro')) {
-    document.fonts.ready.then(() => startSwipeHint(activeCard));
-  }
+  document.fonts.ready.then(() => {
+    swipeHintObserver = new IntersectionObserver((entries) => {
+      const hasReachedCards = entries.some((entry) => entry.isIntersecting);
+
+      if (!hasReachedCards) {
+        return;
+      }
+
+      swipeHintObserver.disconnect();
+
+      if (!reducedMotion.matches) {
+        startSwipeHint(activeCard);
+      }
+    }, { threshold: 0.35 });
+    swipeHintObserver.observe(workflowStack);
+  });
+
+  document.querySelectorAll('[data-replay-swipe-hint]').forEach((replaySwipeHintButton) => {
+    replaySwipeHintButton.addEventListener('click', () => {
+      document.querySelector('#hero-title')?.scrollIntoView({
+        behavior: reducedMotion.matches ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
+  });
 
   function updateCardAvailability() {
     cards.forEach((card) => {

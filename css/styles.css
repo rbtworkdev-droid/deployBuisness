@@ -312,22 +312,58 @@ a:focus-visible {
 
 .hero {
   position: relative;
+  isolation: isolate;
   display: grid;
   min-height: 660px;
   align-content: center;
   padding-block: 5.5rem 4.5rem;
 }
 
-.hero::before {
+.workflow-intro,
+.hero,
+.section-wrap,
+.site-footer {
+  --section-surface: #21170f;
+  position: relative;
+  isolation: isolate;
+}
+
+.hero {
+  --section-surface: #1e150e;
+}
+
+.approach {
+  --section-surface: #1d140d;
+}
+
+.results {
+  --section-surface: #22180f;
+}
+
+.project-section {
+  --section-surface: #1b130d;
+}
+
+.workflow-intro::after,
+.hero::after,
+.section-wrap::after,
+.site-footer::after {
   position: absolute;
   z-index: -1;
-  top: 7%;
-  right: -17%;
-  width: 70%;
-  height: 90%;
-  background: radial-gradient(ellipse, rgb(113 66 29 / 20%), transparent 68%);
+  inset-block: 0;
+  left: 50%;
+  width: 112vw;
+  border-block: 1px solid rgb(199 139 74 / 12%);
+  background: var(--section-surface);
   content: "";
   pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.hero::after {
+  background:
+    radial-gradient(ellipse at 78% 45%, rgb(113 66 29 / 18%), transparent 52%),
+    var(--section-surface);
 }
 
 .hero-inner {
@@ -341,6 +377,71 @@ a:focus-visible {
   position: relative;
   z-index: 1;
   align-self: start;
+}
+
+.workflow-intro {
+  width: min(calc(100% - 3rem), 1120px);
+  margin-inline: auto;
+  padding-block: clamp(4rem, 8vw, 6.5rem) clamp(3.5rem, 6vw, 5rem);
+}
+
+.workflow-intro-inner {
+  max-width: 940px;
+}
+
+.workflow-intro-eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0 0 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bitrix24-wordmark {
+  padding: 0.38rem 0.65rem;
+  border: 1px solid rgb(52 185 232 / 32%);
+  border-radius: 4px;
+  background: rgb(52 185 232 / 8%);
+  color: #52c3eb;
+  font-family: "Open Sans", Arial, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: -0.06em;
+  white-space: nowrap;
+}
+
+.workflow-intro h2 {
+  max-width: 850px;
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(2.8rem, 5.8vw, 5rem);
+  font-weight: 650;
+  letter-spacing: -0.075em;
+  line-height: 1.02;
+}
+
+.workflow-intro h2 span {
+  color: var(--accent-light);
+}
+
+.workflow-intro-description {
+  max-width: 580px;
+  margin-top: 1.5rem;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.workflow-intro-actions {
+  margin-top: 1.8rem;
+}
+
+.workflow-intro-note {
+  margin-top: 2.5rem;
 }
 
 .eyebrow {
@@ -364,11 +465,12 @@ a:focus-visible {
 }
 
 .hero h1 {
+  max-width: 10ch;
   margin: 0;
-  font-size: clamp(3.2rem, 6vw, 5.3rem);
-  font-weight: 600;
-  letter-spacing: -0.075em;
-  line-height: 1.04;
+  font-size: clamp(3rem, 4.8vw, 4.2rem);
+  font-weight: 650;
+  letter-spacing: -0.065em;
+  line-height: 1.08;
 }
 
 .hero h1 span,
@@ -384,6 +486,14 @@ a:focus-visible {
   color: var(--text-muted);
   font-size: 1.03rem;
   line-height: 1.8;
+}
+
+.hero-copy > .hero-description {
+  max-width: 410px;
+  margin-top: 1.25rem;
+  color: #cfb99f;
+  font-size: 0.96rem;
+  line-height: 1.7;
 }
 
 .hero-actions {
@@ -404,8 +514,10 @@ a:focus-visible {
   border: 1px solid transparent;
   border-radius: 5px;
   font-size: 0.89rem;
+  font-family: inherit;
   font-weight: 650;
   text-decoration: none;
+  cursor: pointer;
   transition: transform 180ms ease, background-color 180ms ease;
 }
 
@@ -1396,7 +1508,7 @@ html.is-loader-intro .workflow-card-back-right {
 }
 
 .services {
-  border-top: 1px solid rgb(74 52 36 / 55%);
+  --section-surface: #21170f;
 }
 
 .section-heading {
@@ -1531,7 +1643,6 @@ html.is-loader-intro .workflow-card-back-right {
   display: grid;
   grid-template-columns: 0.8fr 1.2fr;
   gap: clamp(3rem, 8vw, 7rem);
-  border-top: 1px solid rgb(74 52 36 / 55%);
 }
 
 .approach-intro .text-link {
@@ -1593,7 +1704,6 @@ html.is-loader-intro .workflow-card-back-right {
   align-items: center;
   gap: 3rem 5rem;
   padding-bottom: 7rem;
-  border-top: 1px solid rgb(74 52 36 / 55%);
 }
 
 .results-copy > p:last-child {
@@ -1678,7 +1788,7 @@ html.is-loader-intro .workflow-card-back-right {
 }
 
 .project-section {
-  border-top: 1px solid rgb(74 52 36 / 55%);
+  --section-surface: #1b130d;
 }
 
 .project-table-wrap {
@@ -1809,8 +1919,10 @@ html.is-project-flying {
 }
 
 .site-footer {
+  --section-surface: #21170f;
+  isolation: isolate;
+  position: relative;
   padding-block: 2rem 1rem;
-  border-top: 1px solid rgb(74 52 36 / 65%);
 }
 
 .footer-main {
@@ -1858,6 +1970,7 @@ html.is-project-flying {
 @media (max-width: 800px) {
   .header-inner,
   .hero,
+  .workflow-intro,
   .section-wrap,
   .site-footer {
     width: min(calc(100% - 2.5rem), 650px);
@@ -1947,6 +2060,7 @@ html.is-project-flying {
 @media (max-width: 560px) {
   .header-inner,
   .hero,
+  .workflow-intro,
   .section-wrap,
   .site-footer {
     width: min(calc(100% - 2rem), 440px);
@@ -1991,6 +2105,10 @@ html.is-project-flying {
 
   .hero-description {
     font-size: 0.92rem;
+  }
+
+  .hero-copy > .hero-description {
+    font-size: 0.9rem;
   }
 
   .hero-actions {
