@@ -285,18 +285,15 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     }
 
     workflowCompleteTitle.textContent = 'ЭТО НЕ ВСЁ';
-    workflowCompleteDescription.textContent = 'Детализируйте проект — так мы сможем подобрать оптимальное решение и рассчитать стоимость.';
+    workflowCompleteDescription.innerHTML = `
+      <p>Детализируйте проект — так мы сможем подобрать</p>
+      <p>оптимальное решение и рассчитать стоимость.</p>
+    `;
 
-    if (approvedCardCount > 0 || !finalized) {
-      workflowCompleteAnalyst.hidden = true;
-      workflowCompleteAnalyst.classList.remove('is-visible');
-      workflowComplete.classList.remove('is-all-rejected');
-    } else {
-      workflowCompleteAnalyst.textContent = 'Не подошло? Аналитик поможет найти решение и ответит на вопросы. Продолжайте детализировать ваш проект.';
-      workflowCompleteAnalyst.hidden = false;
-      workflowCompleteAnalyst.classList.add('is-visible');
-      workflowComplete.classList.add('is-all-rejected');
-    }
+    workflowCompleteAnalyst.textContent = 'Не подошло? Аналитик поможет найти решение и ответит на вопросы. Продолжайте детализировать ваш проект.';
+    workflowCompleteAnalyst.hidden = false;
+    workflowCompleteAnalyst.classList.add('is-visible');
+    workflowComplete.classList.add('is-all-rejected');
 
     workflowComplete.hidden = false;
   }

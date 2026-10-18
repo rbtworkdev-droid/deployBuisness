@@ -40,7 +40,6 @@ body {
 
 .site-page {
   width: 100%;
-  margin-left: 5.5556%;
   zoom: 0.9;
 }
 
@@ -360,6 +359,16 @@ a:focus-visible {
   transform: translateX(-50%);
 }
 
+.workflow-intro::after {
+  background:
+    radial-gradient(ellipse at 50% 100%, rgb(8 5 3 / 48%), transparent 52%),
+    radial-gradient(ellipse at 16% 8%, rgb(199 139 74 / 12%), transparent 38%),
+    radial-gradient(ellipse at 68% 78%, rgb(199 139 74 / 7%), transparent 34%),
+    radial-gradient(ellipse at 78% 42%, rgb(113 66 29 / 18%), transparent 52%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='112' height='112' viewBox='0 0 112 112'%3E%3Cg fill='none' stroke='%23c78b4a' stroke-opacity='.12' stroke-width='1'%3E%3Cpath d='M0 56h24l8-8h16l8 8h8l8 8h8l8-8h24M56 0v24l-8 8v16l8 8v8l8 8v8l-8 8v24'/%3E%3Ccircle cx='56' cy='56' r='16'/%3E%3Ccircle cx='56' cy='56' r='3'/%3E%3C/g%3E%3C/svg%3E") repeat,
+    var(--section-surface);
+}
+
 .hero::after {
   background:
     radial-gradient(ellipse at 78% 45%, rgb(113 66 29 / 18%), transparent 52%),
@@ -386,15 +395,47 @@ a:focus-visible {
 }
 
 .workflow-intro-inner {
-  max-width: 940px;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(440px, 1fr);
+  align-items: center;
+  gap: clamp(2rem, 4vw, 3.5rem);
+}
+
+.workflow-intro-copy,
+.workflow-intro-visual {
+  position: relative;
+  z-index: 1;
+}
+
+.workflow-intro-flow {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 72px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.workflow-intro-flow path {
+  stroke: rgb(199 139 74 / 68%);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.workflow-intro-flow-joint {
+  fill: var(--accent);
+  stroke: #1a120b;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
 }
 
 .workflow-intro-eyebrow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.8rem;
-  margin: 0 0 1.25rem;
+  margin: 0 0 0.8rem;
   color: var(--text-muted);
   font-size: 0.72rem;
   font-weight: 650;
@@ -403,35 +444,29 @@ a:focus-visible {
 }
 
 .bitrix24-wordmark {
-  padding: 0.38rem 0.65rem;
-  border: 1px solid rgb(52 185 232 / 32%);
-  border-radius: 4px;
-  background: rgb(52 185 232 / 8%);
-  color: #52c3eb;
-  font-family: "Open Sans", Arial, sans-serif;
-  font-size: 0.95rem;
-  font-weight: 750;
-  letter-spacing: -0.06em;
-  white-space: nowrap;
-}
-
-.workflow-intro h2 {
-  max-width: 850px;
   margin: 0;
-  color: var(--text);
-  font-size: clamp(2.8rem, 5.8vw, 5rem);
-  font-weight: 650;
-  letter-spacing: -0.075em;
-  line-height: 1.02;
+  line-height: 0;
 }
 
-.workflow-intro h2 span {
+.bitrix24-wordmark img {
+  display: block;
+  width: clamp(250px, 34vw, 390px);
+  height: auto;
+}
+
+.workflow-intro-title {
+  max-width: 850px;
+  margin: 1rem 0 0;
   color: var(--accent-light);
+  font-size: clamp(1.65rem, 3.5vw, 2.8rem);
+  font-weight: 550;
+  letter-spacing: -0.055em;
+  line-height: 1.15;
 }
 
 .workflow-intro-description {
-  max-width: 580px;
-  margin-top: 1.5rem;
+  max-width: 620px;
+  margin-top: 1.2rem;
   font-size: 1rem;
   line-height: 1.75;
 }
@@ -441,7 +476,68 @@ a:focus-visible {
 }
 
 .workflow-intro-note {
+  width: fit-content;
+  max-width: 100%;
   margin-top: 2.5rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgb(199 139 74 / 12%);
+  border-radius: 8px;
+  background: linear-gradient(105deg, rgb(15 10 7 / 72%), rgb(15 10 7 / 42%));
+  box-shadow: 0 10px 28px rgb(0 0 0 / 14%);
+}
+
+.workflow-intro-visual {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  margin-top: clamp(1rem, 3vw, 2rem);
+  padding-top: 72px;
+  justify-self: end;
+}
+
+.workflow-source-logo {
+  position: absolute;
+  z-index: 3;
+  top: -40px;
+  left: 50%;
+  display: block;
+  width: 80px;
+  height: 80px;
+  transform: translateX(-50%);
+}
+
+.workflow-sources {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.workflow-source {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgb(184 159 132 / 26%);
+  border-radius: 8px;
+  background: #241a13;
+}
+
+.workflow-source img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.55;
+  object-fit: cover;
+  filter: saturate(0.76);
+}
+
+.workflow-source > span {
+  display: block;
+  min-height: 48px;
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid rgb(184 159 132 / 16%);
+  color: var(--text);
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 .eyebrow {
@@ -642,12 +738,7 @@ a:focus-visible {
   justify-items: center;
   gap: 0.32rem;
   padding-inline: 0.25rem;
-}
 
-.workflow-complete:not(.is-all-rejected) .workflow-complete-copy {
-  grid-row: 1 / 3;
-  align-self: center;
-  align-content: center;
 }
 
 .workflow-complete-copy h3 {
@@ -661,12 +752,14 @@ a:focus-visible {
   text-wrap: balance;
 }
 
-.workflow-complete:not(.is-all-rejected) .workflow-complete-copy h3 {
-  font-size: 1.3rem;
+.workflow-complete-description {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  max-width: 30rem;
 }
 
-.workflow-complete-copy > p {
-  max-width: 30rem;
+.workflow-complete-description p {
   margin: 0;
   color: #392817;
   font-size: 0.84rem;
@@ -676,13 +769,9 @@ a:focus-visible {
   text-wrap: pretty;
 }
 
-.workflow-complete:not(.is-all-rejected) .workflow-complete-copy > p {
-  font-size: 0.9rem;
-}
-
 .workflow-complete-analyst {
   position: absolute;
-  top: 50%;
+  top: 40%;
   left: 50%;
   width: calc(100% - 2.4rem);
   transform: translate(-50%, -50%);
@@ -1965,6 +2054,19 @@ html.is-project-flying {
 .footer-bottom a {
   color: var(--text-muted);
   text-decoration: none;
+}
+
+@media (max-width: 960px) {
+  .workflow-intro-inner {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .workflow-intro-visual {
+    width: min(100%, 520px);
+    margin-top: 0;
+    justify-self: center;
+  }
 }
 
 @media (max-width: 800px) {
