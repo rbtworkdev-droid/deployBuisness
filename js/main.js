@@ -197,6 +197,9 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     const cardHeight = burningCard.offsetHeight;
     const startLeft = Number.parseFloat(burningCard.style.left);
     const startTop = Number.parseFloat(burningCard.style.top);
+    const bleed = 32;
+    const sceneWidth = cardWidth + bleed * 2;
+    const sceneHeight = cardHeight + bleed * 2;
     let startRotation = 0;
 
     if (cardStyle.transform !== 'none') {
@@ -213,39 +216,86 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
       }
     }
     const burnTransform = `rotateZ(${startRotation}deg)`;
-    burningCard.style.transform = burnTransform;
-
+    const svgNamespace = 'http://www.w3.org/2000/svg';
+    const scene = document.createElementNS(svgNamespace, 'svg');
+    scene.classList.add('workflow-burn-scene');
+    scene.setAttribute('aria-hidden', 'true');
+    scene.setAttribute('width', String(sceneWidth));
+    scene.setAttribute('height', String(sceneHeight));
+    scene.setAttribute('viewBox', `0 0 ${sceneWidth} ${sceneHeight}`);
+    scene.style.left = `${startLeft - bleed}px`;
+    scene.style.top = `${startTop - bleed}px`;
+    scene.style.width = `${sceneWidth}px`;
+    scene.style.height = `${sceneHeight}px`;
+    scene.style.transform = `translate3d(0, 0, 0) ${burnTransform}`;
+    const defs = document.createElementNS(svgNamespace, 'defs');
+    const clipId = `workflow-burn-${Math.random().toString(36).slice(2)}`;
+    const clipPath = document.createElementNS(svgNamespace, 'clipPath');
+    clipPath.id = clipId;
+    clipPath.setAttribute('clipPathUnits', 'userSpaceOnUse');
+    const clipShape = document.createElementNS(svgNamespace, 'path');
+    clipShape.setAttribute('transform', `translate(${bleed} ${bleed})`);
+    clipPath.append(clipShape);
+    defs.append(clipPath);
+    scene.append(defs);
+    const cardSurface = document.createElementNS(svgNamespace, 'foreignObject');
+    cardSurface.setAttribute('x', String(bleed));
+    cardSurface.setAttribute('y', String(bleed));
+    cardSurface.setAttribute('width', String(cardWidth));
+    cardSurface.setAttribute('height', String(cardHeight));
+    cardSurface.setAttribute('clip-path', `url(#${clipId})`);
+    const cardWrapper = document.createElement('div');
+    cardWrapper.style.width = `${cardWidth}px`;
+    cardWrapper.style.height = `${cardHeight}px`;
+    cardWrapper.style.overflow = 'hidden';
+    burningCard.className = 'workflow-card workflow-burn';
+    burningCard.style.position = 'relative';
+    burningCard.style.inset = 'auto';
+    burningCard.style.width = `${cardWidth}px`;
+    burningCard.style.height = `${cardHeight}px`;
+    burningCard.style.margin = '0';
+    burningCard.style.transform = 'none';
+    burningCard.style.transformOrigin = 'center';
+    burningCard.style.opacity = '1';
+    cardWrapper.append(burningCard);
+    cardSurface.append(cardWrapper);
+    scene.append(cardSurface);
     const fire = document.createElement('canvas');
-    fire.className = 'workflow-fire';
-    fire.setAttribute('aria-hidden', 'true');
-    const dpr = Math.min(window.devicePixelRatio, 1.5);
-    fire.width = Math.ceil(cardWidth * dpr);
-    fire.height = Math.ceil(cardHeight * dpr);
-    fire.style.left = burningCard.style.left;
-    fire.style.top = burningCard.style.top;
-    fire.style.width = `${cardWidth}px`;
-    fire.style.height = `${cardHeight}px`;
-    fire.style.transformOrigin = cardStyle.transformOrigin;
-    fire.style.transform = burnTransform;
+    const fireSurface = document.createElementNS(svgNamespace, 'foreignObject');
+    fireSurface.setAttribute('x', '0');
+    fireSurface.setAttribute('y', '0');
+    fireSurface.setAttribute('width', String(sceneWidth));
+    fireSurface.setAttribute('height', String(sceneHeight));
+    const fireWrapper = document.createElement('div');
+    fireWrapper.style.width = `${sceneWidth}px`;
+    fireWrapper.style.height = `${sceneHeight}px`;
+    fireWrapper.style.overflow = 'visible';
+    const dpr = Math.min(window.devicePixelRatio, 1.25);
+    fire.width = Math.ceil(sceneWidth * dpr);
+    fire.height = Math.ceil(sceneHeight * dpr);
+    fire.style.display = 'block';
+    fire.style.width = `${sceneWidth}px`;
+    fire.style.height = `${sceneHeight}px`;
+    fireWrapper.append(fire);
+    fireSurface.append(fireWrapper);
+    scene.append(fireSurface);
     const context = fire.getContext('2d');
 
     if (!context) {
       console.error('Unable to create a 2D canvas context for the card burn effect.');
-      burningCard.remove();
-      fire.remove();
+      scene.remove();
       card.remove();
       promoteNextCard();
       onComplete();
       return;
     }
 
-    document.body.append(fire);
+    document.body.append(scene);
     card.remove();
     promoteNextCard();
 
     if (reducedMotion.matches) {
-      burningCard.remove();
-      fire.remove();
+      scene.remove();
       onComplete();
       return;
     }
@@ -254,7 +304,7 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     const duration = 580;
     const width = cardWidth;
     const height = cardHeight;
-    const sampleCount = Math.max(36, Math.ceil(width / 6));
+    const sampleCount = Math.max(32, Math.ceil(width / 10));
     const edgePositions = Array.from({ length: sampleCount + 1 }, (_, index) => index / sampleCount * 100);
     const noiseSeed = Array.from({ length: 17 }, () => Math.random());
     const radius = 12;
@@ -311,16 +361,15 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     function burnFrame(now) {
       const progress = Math.min(1, (now - startTime) / duration);
       const edge = edgePositions.map((_, index) => edgeAt(index, now, progress));
-      burningCard.style.clipPath = `path("${createBurnPath(edge)}")`;
+      clipShape.setAttribute('d', createBurnPath(edge));
       burningCard.style.opacity = String(1 - Math.max(0, (progress - 0.92) / 0.08));
-      burningCard.style.left = `${startLeft - progress * 10}px`;
-      burningCard.style.top = `${startTop - progress * 10 + Math.sin(progress * 22) * 2}px`;
-      fire.style.left = burningCard.style.left;
-      fire.style.top = burningCard.style.top;
+      scene.style.transform = `translate3d(${-progress * 10}px, ${-progress * 10}px, 0) ${burnTransform}`;
 
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      context.clearRect(0, 0, width, height);
+      context.clearRect(0, 0, sceneWidth, sceneHeight);
       context.globalCompositeOperation = 'lighter';
+      context.save();
+      context.translate(bleed, bleed);
 
       const edgeY = edge.map((value) => Math.max(radius, Math.min(height, height * value / 100)));
       const edgePoints = edgeY.map((y, index) => ({
@@ -348,7 +397,8 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
       context.stroke();
       context.shadowBlur = 0;
 
-      for (let index = 0; index < edgeY.length; index += 8) {
+      const flameStep = Math.max(1, Math.floor(edgeY.length / 10));
+      for (let index = 0; index < edgeY.length; index += flameStep) {
         const x = width * edgePositions[index] / 100;
         const baseline = edgeY[index];
         const seed = noiseSeed[Math.floor(index / edgeY.length * noiseSeed.length)];
@@ -404,17 +454,17 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
         context.stroke();
       }
       context.shadowBlur = 0;
+      context.restore();
 
       if (progress < 1) {
         window.requestAnimationFrame(burnFrame);
       } else {
-        burningCard.remove();
-        fire.remove();
+        scene.remove();
         onComplete();
       }
     }
 
-    window.requestAnimationFrame(burnFrame);
+    burnFrame(startTime);
   }
 
   function chooseCard(card, approved, visualCard = card) {
