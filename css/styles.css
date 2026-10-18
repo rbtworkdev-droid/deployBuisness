@@ -155,12 +155,51 @@ html.is-loading .site-loader {
   }
 }
 
-html.is-loading .workflow-card {
-  animation-play-state: paused;
-}
-
 .is-preparing-animations .workflow-card {
   will-change: transform, filter, box-shadow;
+}
+
+.page-refresh-notice {
+  position: fixed;
+  z-index: 20;
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  left: max(1.25rem, env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.95rem;
+  border: 1px solid rgb(74 52 36 / 80%);
+  border-radius: 8px;
+  background: rgb(38 26 18 / 94%);
+  box-shadow: 0 12px 34px rgb(0 0 0 / 28%);
+  color: var(--text);
+  font-size: 0.78rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.page-refresh-notice[hidden] {
+  display: none;
+}
+
+.page-refresh-notice.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-refresh-notice.is-hiding {
+  opacity: 0;
+  transform: translateY(5px);
+}
+
+.page-refresh-notice-mark {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgb(199 139 74 / 50%);
 }
 
 a {
@@ -427,7 +466,15 @@ a:focus-visible {
   border-radius: 12px;
   background: linear-gradient(145deg, #302116, #21170f 72%);
   box-shadow: 0 25px 80px rgb(0 0 0 / 26%);
+  animation: none;
+}
+
+html.is-loader-intro .workflow-card {
   animation: workflow-card-drop 1.35s linear both;
+}
+
+html.is-loading .workflow-card {
+  animation-play-state: paused;
 }
 
 .workflow-card-department-sales {
@@ -539,6 +586,9 @@ a:focus-visible {
 .workflow-card-back {
   position: absolute;
   z-index: 0;
+}
+
+html.is-loader-intro .workflow-card-back {
   animation-name: workflow-card-layer-drop;
   animation-delay: 90ms;
 }
@@ -548,6 +598,9 @@ a:focus-visible {
   --layer-y: -84px;
   --layer-rotate: 3deg;
   --layer-rotate-y: -3deg;
+}
+
+html.is-loader-intro .workflow-card-back-right {
   animation-delay: 180ms;
 }
 
@@ -1679,7 +1732,8 @@ html.is-project-flying {
   }
 
   .site-loader,
-  .site-loader-status {
+  .site-loader-status,
+  .page-refresh-notice {
     transition-duration: 0.01ms !important;
   }
 
@@ -1687,7 +1741,8 @@ html.is-project-flying {
     animation: none;
   }
 
-  .workflow-card {
+  .workflow-card,
+  html.is-loader-intro .workflow-card {
     animation: none;
     will-change: auto;
   }

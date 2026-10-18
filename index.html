@@ -24,7 +24,7 @@
 
         window.localStorage.setItem(loaderStorageKey, String(loaderNow));
         if (shouldShowLoader) {
-          document.documentElement.classList.add("is-loading");
+          document.documentElement.classList.add("is-loading", "is-loader-intro");
         }
       } catch (error) {
         console.error("Не удалось проверить время последней загрузки страницы.", error);
@@ -43,6 +43,10 @@
         <p class="site-loader-log-heading">ПОДГОТОВКА СИСТЕМЫ</p>
         <div class="site-loader-log-entries"></div>
       </div>
+    </div>
+    <div class="page-refresh-notice" role="status" aria-live="polite" aria-atomic="true" hidden>
+      <span class="page-refresh-notice-mark" aria-hidden="true"></span>
+      <span>Страница обновлена</span>
     </div>
     <header class="site-header">
       <div class="header-inner">

@@ -59,9 +59,9 @@ if (siteLoader && document.documentElement.classList.contains('is-loading')) {
     siteLoader.remove();
     pageRoot.classList.remove('is-loading');
 
-    if (!reducedMotion.matches) {
-      window.setTimeout(() => pageRoot.classList.remove('is-preparing-animations'), 1700);
-    }
+    window.setTimeout(() => {
+      pageRoot.classList.remove('is-loader-intro', 'is-preparing-animations');
+    }, reducedMotion.matches ? 0 : 1700);
   }
 
   prepareSiteIntro();
@@ -71,6 +71,23 @@ const year = document.querySelector('[data-current-year]');
 
 if (year) {
   year.textContent = new Date().getFullYear();
+}
+
+const pageRefreshNotice = document.querySelector('.page-refresh-notice');
+const navigationEntry = window.performance.getEntriesByType('navigation')[0];
+
+if (
+  pageRefreshNotice
+  && navigationEntry?.type === 'reload'
+  && !document.documentElement.classList.contains('is-loading')
+) {
+  pageRefreshNotice.hidden = false;
+  window.requestAnimationFrame(() => pageRefreshNotice.classList.add('is-visible'));
+  window.setTimeout(() => {
+    pageRefreshNotice.classList.remove('is-visible');
+    pageRefreshNotice.classList.add('is-hiding');
+    window.setTimeout(() => pageRefreshNotice.remove(), 200);
+  }, 2400);
 }
 
 const workflowStack = document.querySelector('.workflow-stack');
@@ -99,6 +116,98 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
     ghost.style.setProperty('--reject-opacity', String(Math.max(0, -deltaX / (rect.width * 0.35))));
   }
 
+  function startSwipeHint(card) {
+    if (!card || card !== activeCard || reducedMotion.matches) {
+      return;
+    }
+
+    swipeHintTimeout = window.setTimeout(() => {
+      if (reducedMotion.matches || card !== activeCard || !card.isConnected || isChoosing || drag) {
+        return;
+      }
+
+      const rect = card.getBoundingClientRect();
+      const departmentClass = Array.from(card.classList).find((className) => className.startsWith('workflow-card-department-'));
+      const ghost = card.cloneNode(true);
+      ghost.className = `workflow-card ${departmentClass ?? ''} workflow-drag-ghost workflow-hint-ghost is-dragging is-swipe-hint`.trim();
+      ghost.setAttribute('aria-hidden', 'true');
+      const cursor = document.createElement('span');
+      const cursorSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      const cursorPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      cursor.className = 'workflow-hint-cursor';
+      cursor.setAttribute('aria-hidden', 'true');
+      cursorSvg.setAttribute('viewBox', '0 0 24 30');
+      cursorSvg.setAttribute('focusable', 'false');
+      cursorPath.setAttribute('d', 'M3 2.5v22l5.2-5 3.4 7.2 3.2-1.5-3.2-7h7.2L3 2.5z');
+      cursorSvg.append(cursorPath);
+      cursor.append(cursorSvg);
+      ghost.append(cursor);
+      ghost.querySelectorAll('button').forEach((button) => {
+        button.disabled = true;
+      });
+      ghost.style.left = `${rect.left}px`;
+      ghost.style.top = `${rect.top}px`;
+      ghost.style.width = `${rect.width}px`;
+      ghost.style.height = `${rect.height}px`;
+      ghost.style.transform = 'none';
+      ghost.style.animation = 'none';
+      document.body.append(ghost);
+      const previousVisibility = card.style.visibility;
+      card.style.visibility = 'hidden';
+
+      swipeHintCleanup = () => {
+        window.cancelAnimationFrame(swipeHintFrame);
+        window.clearTimeout(swipeHintFadeTimeout);
+        window.clearTimeout(swipeHintFadeCleanupTimeout);
+        ghost.remove();
+        card.style.visibility = previousVisibility;
+        swipeHintCleanup = null;
+      };
+
+      const duration = 2400;
+      const fadeDuration = 700;
+      const startTime = performance.now();
+      let previousTime = startTime;
+      let deltaX = 0;
+      let velocityX = 0;
+      let fadeStartedAt;
+      const animateSwipeHint = (now) => {
+        const elapsed = now - startTime;
+        const currentRect = card.getBoundingClientRect();
+        const currentSwipeDistance = currentRect.width * 0.35 / 3;
+        const targetX = elapsed < 650 ? -currentSwipeDistance : elapsed < 1300 ? currentSwipeDistance : 0;
+        const frameTime = Math.min((now - previousTime) / 1000, 0.032);
+        const steps = Math.max(1, Math.ceil(frameTime / 0.016));
+        const stepTime = frameTime / steps;
+        previousTime = now;
+
+        for (let step = 0; step < steps; step += 1) {
+          const acceleration = (targetX - deltaX) * 180 - velocityX * 34;
+          velocityX += acceleration * stepTime;
+          deltaX += velocityX * stepTime;
+        }
+
+        ghost.style.top = `${currentRect.top}px`;
+        ghost.style.width = `${currentRect.width}px`;
+        ghost.style.height = `${currentRect.height}px`;
+        updateDragVisual(ghost, currentRect, deltaX, 0);
+
+        if (fadeStartedAt === undefined || now - fadeStartedAt < fadeDuration) {
+          swipeHintFrame = window.requestAnimationFrame(animateSwipeHint);
+        }
+
+        if (elapsed >= duration && !swipeHintFadeTimeout) {
+          swipeHintFadeTimeout = window.setTimeout(() => {
+            ghost.classList.add('is-swipe-hint-fading');
+            fadeStartedAt = performance.now();
+            swipeHintFadeCleanupTimeout = window.setTimeout(swipeHintCleanup, fadeDuration);
+          }, 400);
+        }
+      };
+      swipeHintFrame = window.requestAnimationFrame(animateSwipeHint);
+    }, 250);
+  }
+
   cards.forEach((card) => {
     card.addEventListener('animationend', (event) => {
       if (event.target !== card) {
@@ -106,98 +215,13 @@ if (workflowStack && projectItems && projectDropZone && projectStatus) {
       }
 
       card.style.animation = 'none';
-
-      if (card !== activeCard || reducedMotion.matches) {
-        return;
-      }
-
-      swipeHintTimeout = window.setTimeout(() => {
-        if (reducedMotion.matches || card !== activeCard || !card.isConnected || isChoosing || drag) {
-          return;
-        }
-
-        const rect = card.getBoundingClientRect();
-        const departmentClass = Array.from(card.classList).find((className) => className.startsWith('workflow-card-department-'));
-        const ghost = card.cloneNode(true);
-        ghost.className = `workflow-card ${departmentClass ?? ''} workflow-drag-ghost workflow-hint-ghost is-dragging is-swipe-hint`.trim();
-        ghost.setAttribute('aria-hidden', 'true');
-        const cursor = document.createElement('span');
-        const cursorSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        const cursorPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        cursor.className = 'workflow-hint-cursor';
-        cursor.setAttribute('aria-hidden', 'true');
-        cursorSvg.setAttribute('viewBox', '0 0 24 30');
-        cursorSvg.setAttribute('focusable', 'false');
-        cursorPath.setAttribute('d', 'M3 2.5v22l5.2-5 3.4 7.2 3.2-1.5-3.2-7h7.2L3 2.5z');
-        cursorSvg.append(cursorPath);
-        cursor.append(cursorSvg);
-        ghost.append(cursor);
-        ghost.querySelectorAll('button').forEach((button) => {
-          button.disabled = true;
-        });
-        ghost.style.left = `${rect.left}px`;
-        ghost.style.top = `${rect.top}px`;
-        ghost.style.width = `${rect.width}px`;
-        ghost.style.height = `${rect.height}px`;
-        ghost.style.transform = 'none';
-        ghost.style.animation = 'none';
-        document.body.append(ghost);
-        const previousVisibility = card.style.visibility;
-        card.style.visibility = 'hidden';
-
-        swipeHintCleanup = () => {
-          window.cancelAnimationFrame(swipeHintFrame);
-          window.clearTimeout(swipeHintFadeTimeout);
-          window.clearTimeout(swipeHintFadeCleanupTimeout);
-          ghost.remove();
-          card.style.visibility = previousVisibility;
-          swipeHintCleanup = null;
-        };
-
-        const duration = 2400;
-        const fadeDuration = 700;
-        const startTime = performance.now();
-        let previousTime = startTime;
-        let deltaX = 0;
-        let velocityX = 0;
-        let fadeStartedAt;
-        const animateSwipeHint = (now) => {
-          const elapsed = now - startTime;
-          const currentRect = card.getBoundingClientRect();
-          const currentSwipeDistance = currentRect.width * 0.35 / 3;
-          const targetX = elapsed < 650 ? -currentSwipeDistance : elapsed < 1300 ? currentSwipeDistance : 0;
-          const frameTime = Math.min((now - previousTime) / 1000, 0.032);
-          const steps = Math.max(1, Math.ceil(frameTime / 0.016));
-          const stepTime = frameTime / steps;
-          previousTime = now;
-
-          for (let step = 0; step < steps; step += 1) {
-            const acceleration = (targetX - deltaX) * 180 - velocityX * 34;
-            velocityX += acceleration * stepTime;
-            deltaX += velocityX * stepTime;
-          }
-
-          ghost.style.top = `${currentRect.top}px`;
-          ghost.style.width = `${currentRect.width}px`;
-          ghost.style.height = `${currentRect.height}px`;
-          updateDragVisual(ghost, currentRect, deltaX, 0);
-
-          if (fadeStartedAt === undefined || now - fadeStartedAt < fadeDuration) {
-            swipeHintFrame = window.requestAnimationFrame(animateSwipeHint);
-          }
-
-          if (elapsed >= duration && !swipeHintFadeTimeout) {
-            swipeHintFadeTimeout = window.setTimeout(() => {
-              ghost.classList.add('is-swipe-hint-fading');
-              fadeStartedAt = performance.now();
-              swipeHintFadeCleanupTimeout = window.setTimeout(swipeHintCleanup, fadeDuration);
-            }, 400);
-          }
-        };
-        swipeHintFrame = window.requestAnimationFrame(animateSwipeHint);
-      }, 250);
+      startSwipeHint(card);
     }, { once: true });
   });
+
+  if (!document.documentElement.classList.contains('is-loader-intro')) {
+    startSwipeHint(activeCard);
+  }
 
   function updateActionAvailability() {
     cards.forEach((card) => {
